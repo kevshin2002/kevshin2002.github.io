@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[2916],{8486:s=>{s.exports=JSON.parse('{"label":"C++","permalink":"/docs/tags/c","allTagsPath":"/docs/tags","count":1,"items":[{"id":"C++/C++","title":"C++","description":"This is just a landing page filler.","permalink":"/docs/C++/"}],"unlisted":false}')}}]);

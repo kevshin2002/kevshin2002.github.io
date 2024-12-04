@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://kevshin2002.github.io/blog</id>
+    <title>Kevin Shin, Electrical Engineer Blog</title>
+    <updated>2021-09-30T18:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://kevshin2002.github.io/blog"/>
+    <subtitle>Kevin Shin, Electrical Engineer Blog</subtitle>
+    <icon>https://kevshin2002.github.io/img/favicon.ico</icon>
+    <rights>Copyright © 2024 Kevin Shin. All rights reserved.</rights>
+    <entry>
+        <title type="html"><![CDATA[Hello, world.]]></title>
+        <id>https://kevshin2002.github.io/blog/hello-world</id>
+        <link href="https://kevshin2002.github.io/blog/hello-world"/>
+        <updated>2021-09-30T18:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Hello, I am Kevin!]]></summary>
+        <content type="html"><![CDATA[<p>Hello, I am Kevin!</p>]]></content>
+        <author>
+            <name>Kevin Shin</name>
+            <uri>https://kevshin2002.github.io</uri>
+        </author>
+        <category label="shorts" term="shorts"/>
+        <category label="hello" term="hello"/>
+        <category label="introduction" term="introduction"/>
+    </entry>
+</feed>

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[4296],{2416:a=>{a.exports=JSON.parse('[{"label":"C++","permalink":"/docs/tags/c","count":1},{"label":"Manual","permalink":"/docs/tags/manual","count":1},{"label":"Machine-Learning","permalink":"/docs/tags/machine-learning","count":1}]')}}]);

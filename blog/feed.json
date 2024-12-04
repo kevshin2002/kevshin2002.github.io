@@ -1,0 +1,25 @@
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "Kevin Shin, Electrical Engineer Blog",
+    "home_page_url": "https://kevshin2002.github.io/blog",
+    "description": "Kevin Shin, Electrical Engineer Blog",
+    "items": [
+        {
+            "id": "https://kevshin2002.github.io/blog/hello-world",
+            "content_html": "<p>Hello, I am Kevin!</p>",
+            "url": "https://kevshin2002.github.io/blog/hello-world",
+            "title": "Hello, world.",
+            "summary": "Hello, I am Kevin!",
+            "date_modified": "2021-09-30T18:00:00.000Z",
+            "author": {
+                "name": "Kevin Shin",
+                "url": "https://kevshin2002.github.io"
+            },
+            "tags": [
+                "shorts",
+                "hello",
+                "introduction"
+            ]
+        }
+    ]
+}

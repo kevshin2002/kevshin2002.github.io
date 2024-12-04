@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[9112],{1568:l=>{l.exports=JSON.parse('[{"label":"shorts","permalink":"/blog/tags/shorts","count":1},{"label":"hello","permalink":"/blog/tags/hello","count":1},{"label":"introduction","permalink":"/blog/tags/introduction","count":1}]')}}]);
