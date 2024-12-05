@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[1096],{8087:s=>{s.exports=JSON.parse('{"label":"Mathematics","permalink":"/docs/tags/mathematics","allTagsPath":"/docs/tags","count":1,"items":[{"id":"Mathematics/Mathematics","title":"Mathematics","description":"","permalink":"/docs/Mathematics/"}],"unlisted":false}')}}]);
