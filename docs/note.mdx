@@ -1,77 +1,36 @@
 ---
 id: note
-title: About Taking the Notes
+title: General Overview
 tags:
   - Manual
 hide_table_of_contents: true
 sidebar_position: 1
 last_update:
-  date: 6/24/2024
-  author: Tarek Liu
+  date: 12/4/2024
+  author: Kevin Shin
 ---
 
 import Link from '@docusaurus/Link';
 import SponsorIcon from '@site/src/components/common/SponsorIcon';
 import ArrowRight from '@site/static/icons/arrow_right.svg';
-import Psychology from '@site/static/icons/psychology.svg';
+import Software from '@site/static/icons/software.svg';
+import Robot from '@site/static/icons/robot.svg';
+import Math from '@site/static/icons/math.svg';
+import Science from '@site/static/icons/science.svg';
+import Misc from '@site/static/icons/misc.svg';
 import SVM from '@site/static/icons/svm.svg';
 
 <div className="gallery">
-  <div className="sub-heading">
-    <div className="front-matter">
-      <p>
-        <h4>Mechanism to Remind Myself to Be in "Output" Mode</h4>{' '}
-          
-        > <i>Verum Ipsum Factum. </i>(We only know what we make.)
-        >
-        > \- Giambattista Vico, 18th-century philosopher{' '}
-          
-        I often get caught in overthinking, making it difficult to start implementing ideas. This tendency traps me in "Input" mode, where I consume information but don't produce anything. Simply telling myself "not to think too much" or "avoid perfectionism" doesn't work. Writing things down, even just making rough notes or initial drafts, is a practical way to shift into "Output" mode. It helps me break the cycle of overthinking and start creating.{' '}
-        <br />
-        <h4>Using Tools to Help Link Knowledge and Foster Action</h4>{' '}
-        Creativity and breakthroughs come from connecting things that were previously unconnected[(The Art of Improvement, 2020)](https://youtu.be/JmQPNJhw5kQ?si=-wV1Wnaqc1BnML13)<sup>[1](#ref-1)</sup>.  However, human working memory is limited[(Miller, 1956)](https://ieeexplore.ieee.org/abstract/document/1056815)<sup>[2](#ref-2)</sup>, and we can only process a finite amount of information at a time. Additionally, the context in which we retrieve information influences our ability to generate ideas. Therefore, using tools to overcome these limitations is crucial. For me, taking notes and using tools like [Obsidian](https://obsidian.md/) to link ideas is an effective method to foster creativity and action.{' '}
-      </p>
-      <iframe 
-        width="560" 
-        height="315" 
-        src="https://www.youtube.com/embed/JmQPNJhw5kQ?si=wQSCpYv1leBF2IQX&amp;start=209" 
-        title="The 6 Habits of Exceptionally Creative People" 
-        frameborder="0" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
-      </iframe>
-    </div>
-  </div>
-  <div className="sub-heading">
-    <div className="front-matter">
-      <p>
-        <h4>Aligning with My Core Values and OKRs</h4>{' '}
-        One of my core values ruled in my [Periodic Note](https://youtu.be/T2Aeaq4sk7M?si=RjkhWUcg73L2MGmI)<sup>[3](#ref-3)</sup> is continuous learning, encapsulated by the phrase: "No start, no end, only doing." Learning is an end in itself and is worth pursuing even if there isn't an immediate benefit. Practicing this value means: I am happy to share my knowledge with others and regularly create content.{' '}
-        <br />
-        P.S. This content was produced in collaboration with ChatGPT. View prompt in references.<sup>[4](#ref-4)</sup>{' '}
-        <br />
-        If you find my content helpful, buying me a coffee is the greatest encouragement!{' '}
-        <SponsorIcon message="Buy mememe" sponsor_url="https://www.buymeacoffee.com/liuyuweitarek"/>{' '}
-      </p>
-      <iframe 
-        width="560" 
-        height="315" 
-        src="https://www.youtube.com/embed/T2Aeaq4sk7M?si=CrLqEJIMaYRcX3oY&amp;start=62" 
-        title="How to set goals in Obsidian // Templates, Periodic Notes" 
-        frameborder="0" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
-      </iframe>
-    </div>
-  </div>
   <div className="sub-heading">
     <h2>Topics</h2>
   </div>
   <div className="overview-card">
     <div className="overview-card-header">
-      <Psychology/>
-      <h4>Psychology</h4>
+      <Software/>
+      <h4>Software</h4>
     </div>
-    <p>Psychological notes about paradigms, methods, and human authentic behavioral experiments.</p>
-    <Link to="/docs/Psychology">
+    <p>Software notes about best practices, paradigms, idioms, and C++</p>
+    <Link to="/docs/Software">
       See More <ArrowRight className="arrow" />
     </Link>
   </div>
@@ -81,21 +40,50 @@ import SVM from '@site/static/icons/svm.svg';
       <h4>Machine Learning</h4>
     </div>
     <p>Machine Learning notes about algorithms, model implementations, and research insights.</p>
-    <Link to="/docs/Machine-learning">
+    <Link to="/docs/Machine-Learning">
+      See More <ArrowRight className="arrow" />
+    </Link>
+  </div>
+  <div className="overview-card">
+    <div className="overview-card-header">
+      <Robot/>
+      <h4>Robotics</h4>
+    </div>
+    <p>Robotic learning notes about Control theory, Kalman Filters, and project details</p>
+    <Link to="/docs/Robotics">
+      See More <ArrowRight className="arrow" />
+    </Link>
+  </div>
+  <div className="overview-card">
+    <div className="overview-card-header">
+      <Math/>
+      <h4>Mathematics</h4>
+    </div>
+    <p>Math notes around fundamental mathematics around machine learning and robotics, covering proofs and problem examples</p>
+    <Link to="/docs/Mathematics">
+      See More <ArrowRight className="arrow" />
+    </Link>
+  </div>
+  <div className="overview-card">
+    <div className="overview-card-header">
+      <Science/>
+      <h4>Science</h4>
+    </div>
+    <p>For any cool science things I find on the side</p>
+    <Link to="/docs/Science">
+      See More <ArrowRight className="arrow" />
+    </Link>
+  </div>
+  <div className="overview-card">
+    <div className="overview-card-header">
+      <Misc/>
+      <h4>Misc</h4>
+    </div>
+    <p>Any other stuff that doesn't fit in the other categories</p>
+    <Link to="/docs/Misc">
       See More <ArrowRight className="arrow" />
     </Link>
   </div>
 </div>
 <br />
 <br />
-<div>
-  <h2>References</h2>
-  
-  <a id="ref-1"></a>1. The Art of Improvement. (2020, July 26). The 6 Habits of Exceptionally Creative People [Video]. YouTube. https://youtu.be/JmQPNJhw5kQ?si=hDkVRWWlTPeLmKDN
-  
-  <a id="ref-2"></a>2. Miller, G. (1956). Human memory and the storage of information. <i>IRE Transactions on Information Theory</i>, <i>2</i>(3), 129-137.
-  
-  <a id="ref-3"></a>3. Nicole van der Hoeven. (2022). How to set goals in Obsidian // Templates, Periodic Notes [Video]. YouTube. https://youtu.be/T2Aeaq4sk7M?si=CrLqEJIMaYRcX3oY
-  
-  <a id="ref-4"></a>4. OpenAI. (2024). ChatGPT (Jun 27 version) GPT-4o. https://chatgpt.com/share/e635956f-9bd3-4f37-b001-95812f22377c
-</div>

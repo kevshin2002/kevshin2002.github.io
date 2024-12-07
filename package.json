@@ -1,11 +1,11 @@
 {
-  "name": "liuyuweitarek",
+  "name": "kevshin2002",
   "version": "0.1.0",
   "private": true,
   "author": {
-    "name": "Tarek Liu",
-    "url": "https://liuyuweitarek.github.io",
-    "email": "liuyuwei.tarek@gmail.com"
+    "name": "Kevin Shin",
+    "url": "https://kevshin2002.github.io",
+    "email": "kevshin2002@gmail.com"
   },
   "scripts": {
     "postinstall": "npm run setup-hooks",
@@ -36,8 +36,9 @@
     "@docusaurus/theme-live-codeblock": "^3.4.0",
     "@docusaurus/theme-search-algolia": "^3.4.0",
     "@mdx-js/react": "^3.0.1",
-    "clsx": "^2.1.0",
+    "clsx": "^2.1.1",
     "docusaurus-plugin-sass": "^0.2.2",
+    "framer-motion": "^11.13.1",
     "prism-react-renderer": "^2.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -46,7 +47,7 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.1.1",
-    "@docusaurus/tsconfig": "^3.1.1",
+    "@docusaurus/tsconfig": "^3.6.3",
     "@docusaurus/types": "^3.1.1",
     "@typescript-eslint/eslint-plugin": "^7.0.1",
     "dotenv": "^16.4.5",

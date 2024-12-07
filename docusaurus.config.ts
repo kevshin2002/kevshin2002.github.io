@@ -6,19 +6,19 @@ import type * as Preset from "@docusaurus/preset-classic";
 require('dotenv').config()
 
 const config: Config = {
-  title: "Tarek Liu, Psychoinformatics Engineer",
+  title: "Kevin Shin, Electrical Engineer",
   tagline:
     "Researcher interested in personal growth and tech trends. Tracking authentic behavior, mapping minds, bridging Lab findings to real-world impact.",
-  url: "https://liuyuweitarek.github.io",
+  url: "https://kevshin2002.github.io",
   baseUrl: "/",
   staticDirectories: ['static', 'public'],
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
 
-  // GitHub pages deployment config
-  organizationName: "liuyuweitarek",
-  projectName: "liuyuweitarek.github.io",
+  // GitHub pages deployment config 
+  organizationName: "kevshin2002",
+  projectName: "website",
   trailingSlash: false,
 
   i18n: {
@@ -80,12 +80,12 @@ const config: Config = {
           onlyIncludeVersions: ['current'],
         },
         blog: {
-          postsPerPage: 5,
+          postsPerPage: 10,
           showReadingTime: true,
-          editUrl: "https://github.com/liuyuweitarek/liuyuweitarek.github.io/tree/main/",
+          editUrl: "https://github.com/kevshin2002/kevshin2002.github.io/tree/main/",
           feedOptions: {
             type: "all",
-            copyright: `Copyright © ${new Date().getFullYear()} Tarek Liu. All rights reserved.`,
+            copyright: `Copyright © ${new Date().getFullYear()} Kevin Shin. All rights reserved.`,
           },
         },
         theme: {
@@ -129,35 +129,17 @@ const config: Config = {
     },
     navbar: {
       hideOnScroll: false,
-      title: "Tarek Liu",
+      title: "Kevin Shin",
       logo: {
-        alt: "Tarek Liu Logo",
+        alt: "Kevin Shin Logo",
         src: "img/logo.png",
         srcDark: "img/logo.png",
       },
       items: [
         { to: "/blog", label: "Blog", position: "left" },
-        {
-          to: '/docs/note',
-          label: 'Note',
-          position: 'left',
-        },
+        { to: '/docs/note', label: 'Note', position: 'left',},
         { to: "/projects", label: "Projects", position: "left" },
         { to: "/talks", label: "Talks", position: "left" },
-        {
-          href: 'https://github.com/liuyuweitarek',
-          position: 'right',
-          label: 'Github',
-          className: 'header-github-link',
-          'aria-label': 'GitHub repository',
-        },
-        {
-          href: 'https://docs.google.com/document/d/1mNkcT_MbvsATqlk8M02iyPb2zpSEM1q1GZ2r8tK28Mo/edit?usp=sharing',
-          position: 'right',
-          label: 'Resume',
-          className: 'header-resume-link',
-          'aria-label': 'Resume',
-        },
       ],
     },
     footer: {
@@ -167,19 +149,15 @@ const config: Config = {
           items: [
             {
               label: "Email me",
-              href: "mailto:liuyuwei.tarek@gmail.com",
+              href: "mailto:d3shin@ucsd.edu",
             },
             {
               label: "Github",
-              href: "https://github.com/liuyuweitarek",
+              href: "https://github.com/kevshin2002",
             },
             {
               label: "LinkedIn",
-              href: "https://www.linkedin.com/in/liuyuweitarek",
-            },
-            {
-              label: "HuggingFace",
-              href: "https://huggingface.co/liuyuweitarek",
+              href: "https://www.linkedin.com/in/kevin-shin02/",
             },
           ],
         },
@@ -195,10 +173,6 @@ const config: Config = {
               to: "/blog",
             },
             {
-              label: "Note",
-              to: "/note",
-            },
-            {
               label: "Projects",
               to: "/projects",
             },
@@ -209,50 +183,14 @@ const config: Config = {
           ],
         },
         {
-          title: "Downloads",
-          items: [
-            {
-              label: "Resume",
-              href: "https://docs.google.com/document/d/1mNkcT_MbvsATqlk8M02iyPb2zpSEM1q1GZ2r8tK28Mo/edit?usp=sharing",
-            },
-          ],
         },
-        {
-          title: "Blog feed",
-          items: [
-            {
-              label: "RSS",
-              to: "pathname:///blog/rss.xml",
-            },
-            {
-              label: "Atom",
-              to: "pathname:///blog/atom.xml",
-            },
-            {
-              label: "JSON",
-              to: "pathname:///blog/feed.json",
-            },
-          ],
-        },
-        {
-          title: "Sponsor",
-          items: [
-            {
-              html: `
-                <a href="https://www.buymeacoffee.com/liuyuweitarek" target="_blank">
-                  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
-                </a>
-              `,
-            },
-          ]
-        }
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Tarek Liu. All rights reserved.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Kevin Shin. All rights reserved.`,
     },
     algolia: {
-      appId: process.env.APPLICATION_ID,
-      apiKey: process.env.API_KEY,
-      indexName: process.env.INDEX_NAME,
+      appId: process.env.ALGOLIA_APP_ID,
+      apiKey: process.env.ALGOLIA_API_KEY,
+      indexName: process.env.ALGOLIA_INDEX_KEY,
       contextualSearch: true,
     },
     themes: [

@@ -6,59 +6,63 @@ import { Project, ProjectData } from "../components/projects/Project";
 const assetsDir = "./assets/projects";
 const projects: ProjectData[] = [
   {
-    title: "Robot Remote Control System",
-    description:
-      "Robotics remote-control system using gRPC, with a Flask server and an Android app as client.",
+    title: "Jetson Nano RC Car",
+    description: "TBA",
     url: "https://github.com/liuyuweitarek/Kebbi-Remote-Control-System",
     image: require(`${assetsDir}/Robot-Remote-Control-System.png`),
     role: "Author",
   },
   {
-    title: "Asynchronously Embedding Psychological Test Questions into Human–Robot Conversations for User Profiling",
-    description: "A conceptual validation of the potential use of psychological questionnaires in everyday settings, utilizing the Ten Item Personality Measure (TIPI) to examine the feasibility of asynchronous administration by a robot.",
-    url: "https://link.springer.com/article/10.1007/s12369-020-00716-y",
-    image: require(`${assetsDir}/Asychronously-Psy-Questions.png`),
-    role: "Developer & Second Author",
+    title: "Software Tools",
+    description: "Collection of software tools in C++ for scalability and reuseability, focusing on templatization and best pragma",
+    url: "https://github.com/kevshin2002/Coding-Journey/tree/main/Tools",
+    image: require(`${assetsDir}/factory.png`),
+    role: "Author",
   },
   {
-    title: "Attempt to Implement Psychological Assessments into Human-Robot Interaction.",
-    description: "Using robot to capture human althentic behaviors, and bringing psychological experiments into real-world interaction.",
-    url: "https://youtu.be/nod_fIbyC_E?si=n-fVObJAVskROxaJ",
-    image: require(`${assetsDir}/Implement-Psy-Real-World.png`),
+    title: "Relational Database",
+    description: "Replication of relational databse in C++ with core MySQL functionality, leveraging design patterns like MVC and CoR for extensibility and optimizing data storage and retrieval through caching and indexing.",
+    url: "https://github.com/kevshin2002/Software-Development/tree/main/Relational%20Database",
+    image: require(`${assetsDir}/database.png`),
     role: "Developer",
   },
   {
-    title: "Template: Flutter Docker",
-    description: "Flutter project template which able to quickly create a Flutter Web App environment through docker and develop with VSCode.",
-    url: "https://liuyuweitarek.github.io/flutter-docker-template/",
-    image: require(`${assetsDir}/docker-flutter-template.png`),
-    role: "Author",
+    title: "Traffic Sign Classification",
+    description: "CNN-based deep learning model using ResNeXt-32 in PyTorch for traffic sign classification, trained on the TinyLISA and LISA dataset",
+    url: "https://github.com/kevshin2002/ML-AI/tree/main",
+    image: require(`${assetsDir}/traffic_sign.png`),
+    role: "Co-Developer",
   },
   {
-    title: "Template: Python Poetry WSL2-Ubuntu-GPU Docker",
-    description: "Docker-based Python development template using Poetry and GPU support for PyTorch, compatible with Windows WSL2 and Ubuntu. Includes Jekyll for GitHub Pages documentation.",
-    url: "https://liuyuweitarek.github.io/python-poetry-wsl2-ubuntu-gpu-docker-template/",
-    image: require(`${assetsDir}/python-poetry-wsl2-ubuntu-gpu-docker-template.png`),
-    role: "Author",
+    title: "Classifiers with MNIST",
+    description: "Implementation of linear classifiers using Euclidean and Mahalanobis distance, incorporating Maximum Likelihood Estimation and Principal Component Analysis, with an introduction to unsupervised learning through clustering techniques",
+    url: "https://github.com/kevshin2002/ML-AI/tree/main/Classifiers%20with%20MNIST",
+    image: require(`${assetsDir}/mnist.jpg`),
+    role: "Developer",
   },
   {
-    title: "VScode Theme: Tarek Dark",
-    description: "The VScode theme which supports semantic highlighting in Python. Could be installed through VScode Extension section.",
-    url: "https://marketplace.visualstudio.com/items?itemName=LiuYuweiTarek.tarek-dark",
-    image: require(`${assetsDir}/Tarek-Dark.png`),
-    role: "Author",
+    title: "Variational Autoencoder",
+    description: "CNN model in PyTorch for generating chest X-ray images, utilizing convolutional layers, reparameterization, and performance evaluation with FID and Inception Score.",
+    url: "https://github.com/kevshin2002/ML-AI/blob/main/Variational%20Autoencoder/VAE.ipynb",
+    image: require(`${assetsDir}/chest.png`),
+    role: "Developer",
+  },
+  {
+    title: "TritonHacks Web Development Kit",
+    description: "Beginner-friendly starter kit for high school students to learn and build web applications using HTML, CSS, JavaScript, and FastAPI during a hackathon at UCSD",
+    url: "https://tritonhacks.github.io/thwebdev-24/",
+    image: require(`${assetsDir}/tritonhacks.png`),
+    role: "Team Lead",
   }
 ];
 
 const title = "Projects";
-const description = "Featured projects I was/am involved in.";
 
 export default function Projects(): JSX.Element {
   return (
-    <Layout title={title} description={description}>
+    <Layout title={title}>
       <main className="container container--fluid margin-vert--lg">
         <h1>{title}</h1>
-        <p>{description}</p>
 
         <div className="row">
           {projects.map((project) => (
