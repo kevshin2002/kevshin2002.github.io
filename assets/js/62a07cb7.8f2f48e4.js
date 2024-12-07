@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[5732],{5286:s=>{s.exports=JSON.parse('{"label":"mindset","permalink":"/blog/tags/mindset","allTagsPath":"/blog/tags","count":1,"unlisted":false}')}}]);
