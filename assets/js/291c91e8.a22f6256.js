@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[9136],{7612:e=>{e.exports=JSON.parse('{"label":"Science","permalink":"/docs/tags/science","allTagsPath":"/docs/tags","count":1,"items":[{"id":"Science/Science","title":"Science","description":"This is just a landing page fillerasdsad.","permalink":"/docs/Science/"}],"unlisted":false}')}}]);

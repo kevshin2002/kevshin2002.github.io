@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[1472],{890:e=>{e.exports=JSON.parse('{"label":"Manual","permalink":"/docs/tags/manual","allTagsPath":"/docs/tags","count":1,"items":[{"id":"note","title":"General Overview","description":"Topics","permalink":"/docs/note"}],"unlisted":false}')}}]);

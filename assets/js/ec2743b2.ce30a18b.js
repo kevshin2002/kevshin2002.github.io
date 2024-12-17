@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[6396],{6840:s=>{s.exports=JSON.parse('{"label":"Robotics","permalink":"/docs/tags/robotics","allTagsPath":"/docs/tags","count":1,"items":[{"id":"Robotics/Robotics","title":"Robotics","description":"","permalink":"/docs/Robotics/"}],"unlisted":false}')}}]);
