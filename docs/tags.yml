@@ -1,4 +1,21 @@
-docusaurus:
-  label: 'Manual'
-  permalink: '/manual'
-  description: 'Docs related to the this site's framework'
+Robotics:
+  label: "Robotics"
+  description: "All things related to robotics and automation"
+Science:
+  label: "Science"
+  description: "Science-related documentation and articles"
+Mathematics:
+  label: "Mathematics"
+  description: "Documentation related to mathematical topics"
+Misc:
+  label: "Misc"
+  description: "Miscellaneous topics and documents"
+Software:
+  label: "Software"
+  description: "Topics related to software and programming"
+Manual:
+  label: "Manual"
+  description: "Docs related to the this site's framework"
+Machine-Learning:
+  label: "Machine Learning"
+  description: "Documentation related to machine learning"
