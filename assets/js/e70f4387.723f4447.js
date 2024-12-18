@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[6713],{2822:s=>{s.exports=JSON.parse('{"tag":{"label":"Misc","permalink":"/docs/tags/misc","description":"Miscellaneous topics and documents","allTagsPath":"/docs/tags","count":1,"items":[{"id":"Misc/Misc","title":"Misc","description":"","permalink":"/docs/Misc/"}],"unlisted":false}}')}}]);
