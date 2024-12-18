@@ -2,8 +2,9 @@ import { themes } from "prism-react-renderer";
 
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
-
-require('dotenv').config()
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+require("dotenv").config();
 
 const config: Config = {
   title: "Kevin Shin, Electrical Engineer",
@@ -11,12 +12,12 @@ const config: Config = {
     "Researcher interested in personal growth and tech trends. Tracking authentic behavior, mapping minds, bridging Lab findings to real-world impact.",
   url: "https://kevshin2002.github.io",
   baseUrl: "/",
-  staticDirectories: ['static', 'public'],
+  staticDirectories: ["static", "public"],
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
 
-  // GitHub pages deployment config 
+  // GitHub pages deployment config
   organizationName: "kevshin2002",
   projectName: "website",
   trailingSlash: false,
@@ -58,31 +59,32 @@ const config: Config = {
       "@docusaurus/preset-classic",
       {
         docs: {
-          path: 'docs',
+          path: "docs",
           breadcrumbs: true,
-          routeBasePath: 'docs',
-          include: ['**/*.md', '**/*.mdx'],
+          routeBasePath: "docs",
+          include: ["**/*.md", "**/*.mdx"],
           exclude: [
-            '**/_*.{js,jsx,ts,tsx,md,mdx}',
-            '**/_*/**',
-            '**/*.test.{js,jsx,ts,tsx}',
-            '**/__tests__/**',
+            "**/_*.{js,jsx,ts,tsx,md,mdx}",
+            "**/_*/**",
+            "**/*.test.{js,jsx,ts,tsx}",
+            "**/__tests__/**",
           ],
-          sidebarPath: require.resolve('./sidebars.js'),
-          docsRootComponent: '@theme/DocsRoot',
-          docVersionRootComponent: '@theme/DocVersionRoot',
-          docRootComponent: '@theme/DocRoot',
-          docItemComponent: '@theme/DocItem',
-          remarkPlugins: [require('remark-math')],
+          sidebarPath: require.resolve("./sidebars.js"),
+          docsRootComponent: "@theme/DocsRoot",
+          docVersionRootComponent: "@theme/DocVersionRoot",
+          docRootComponent: "@theme/DocRoot",
+          docItemComponent: "@theme/DocItem",
+          remarkPlugins: [require("remark-math")],
           showLastUpdateAuthor: false,
           showLastUpdateTime: true,
-          lastVersion: 'current',
-          onlyIncludeVersions: ['current'],
+          lastVersion: "current",
+          onlyIncludeVersions: ["current"],
         },
         blog: {
           postsPerPage: 10,
           showReadingTime: true,
-          editUrl: "https://github.com/kevshin2002/kevshin2002.github.io/tree/main/",
+          editUrl:
+            "https://github.com/kevshin2002/kevshin2002.github.io/tree/main/",
           feedOptions: {
             type: "all",
             copyright: `Copyright © ${new Date().getFullYear()} Kevin Shin. All rights reserved.`,
@@ -90,8 +92,9 @@ const config: Config = {
         },
         theme: {
           customCss: [
-            require.resolve("./src/css/custom.scss"), 
-            require.resolve("./src/css/doc-overview-page.scss")
+            require.resolve("./src/css/custom.scss"),
+            //require.resolve("./src/css/doc-overview-page.scss"),
+            require.resolve("./src/css/tagsearch.css"),
           ],
         },
       } satisfies Preset.Options,
@@ -137,7 +140,7 @@ const config: Config = {
       },
       items: [
         { to: "/blog", label: "Blog", position: "left" },
-        { to: '/docs/note', label: 'Note', position: 'left',},
+        { to: "/docs/note", label: "Note", position: "left" },
         { to: "/projects", label: "Projects", position: "left" },
         { to: "/talks", label: "Talks", position: "left" },
       ],
@@ -182,8 +185,7 @@ const config: Config = {
             },
           ],
         },
-        {
-        },
+        {},
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Kevin Shin. All rights reserved.`,
     },
@@ -194,9 +196,9 @@ const config: Config = {
       contextualSearch: true,
     },
     themes: [
-      require.resolve('@docusaurus/theme-live-codeblock'),
-      require.resolve('@docusaurus/theme-search-algolia'),
-      require.resolve('@docusaurus/theme-classic'), 
+      require.resolve("@docusaurus/theme-live-codeblock"),
+      require.resolve("@docusaurus/theme-search-algolia"),
+      require.resolve("@docusaurus/theme-classic"),
     ],
     prism: {
       theme: themes.github,

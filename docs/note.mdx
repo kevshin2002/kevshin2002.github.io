@@ -1,89 +1,17 @@
 ---
 id: note
-title: General Overview
-tags:
-  - Manual
+title: Search
+hide_title: true
 hide_table_of_contents: true
 sidebar_position: 1
+pagination_next: null
+pagination_prev: null
 last_update:
-  date: 12/4/2024
+  date: 12/17/2024
   author: Kevin Shin
 ---
 
-import Link from '@docusaurus/Link';
-import SponsorIcon from '@site/src/components/common/SponsorIcon';
-import ArrowRight from '@site/static/icons/arrow_right.svg';
-import Software from '@site/static/icons/software.svg';
-import Robot from '@site/static/icons/robot.svg';
-import Math from '@site/static/icons/math.svg';
-import Science from '@site/static/icons/science.svg';
-import Misc from '@site/static/icons/misc.svg';
-import SVM from '@site/static/icons/svm.svg';
+import TagSearchNotes from "@site/src/components/tagsearch/index";
+import Link from "@docusaurus/Link";
 
-<div className="gallery">
-  <div className="sub-heading">
-    <h2>Topics</h2>
-  </div>
-  <div className="overview-card">
-    <div className="overview-card-header">
-      <Software/>
-      <h4>Software</h4>
-    </div>
-    <p>Software notes about best practices, paradigms, idioms, and C++</p>
-    <Link to="/docs/Software">
-      See More <ArrowRight className="arrow" />
-    </Link>
-  </div>
-  <div className="overview-card">
-    <div className="overview-card-header">
-      <SVM/>
-      <h4>Machine Learning</h4>
-    </div>
-    <p>Machine Learning notes about algorithms, model implementations, and research insights.</p>
-    <Link to="/docs/Machine-Learning">
-      See More <ArrowRight className="arrow" />
-    </Link>
-  </div>
-  <div className="overview-card">
-    <div className="overview-card-header">
-      <Robot/>
-      <h4>Robotics</h4>
-    </div>
-    <p>Robotic learning notes about Control theory, Kalman Filters, and project details</p>
-    <Link to="/docs/Robotics">
-      See More <ArrowRight className="arrow" />
-    </Link>
-  </div>
-  <div className="overview-card">
-    <div className="overview-card-header">
-      <Math/>
-      <h4>Mathematics</h4>
-    </div>
-    <p>Math notes around fundamental mathematics around machine learning and robotics, covering proofs and problem examples</p>
-    <Link to="/docs/Mathematics">
-      See More <ArrowRight className="arrow" />
-    </Link>
-  </div>
-  <div className="overview-card">
-    <div className="overview-card-header">
-      <Science/>
-      <h4>Science</h4>
-    </div>
-    <p>For any cool science things I find on the side</p>
-    <Link to="/docs/Science">
-      See More <ArrowRight className="arrow" />
-    </Link>
-  </div>
-  <div className="overview-card">
-    <div className="overview-card-header">
-      <Misc/>
-      <h4>Misc</h4>
-    </div>
-    <p>Any other stuff that doesn't fit in the other categories</p>
-    <Link to="/docs/Misc">
-      See More <ArrowRight className="arrow" />
-    </Link>
-  </div>
-</div>
-<br />
-<br />
+<TagSearchNotes />
