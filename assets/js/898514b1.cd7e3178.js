@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[9067],{9187:s=>{s.exports=JSON.parse('{"tags":[{"label":"cpp","permalink":"/docs/tags/cpp","count":1},{"label":"python","permalink":"/docs/tags/python","count":1},{"label":"rust","permalink":"/docs/tags/rust","count":1},{"label":"robotics","permalink":"/docs/tags/robotics","count":1}]}')}}]);
