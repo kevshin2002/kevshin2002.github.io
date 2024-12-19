@@ -65,21 +65,21 @@ const Notes: Note[] = [
     description: "Understand how ROS2 works in C++, Python, and Rust",
     preview: require("./images/ros2.png"),
     website: "./Robotics/ROS2",
-    tags: ["cpp", "robotics"],
+    tags: ["cpp", "python", "rust", "robotics"],
   },
   {
     title: "ROS2 Nav2",
     description: "Understand how the ROS2 navigation framework (Nav2) works",
     preview: require("./images/nav2.png"),
     website: "./Robotics/ROS2/nav2",
-    tags: ["python", "robotics"],
+    tags: ["cpp", "python", "robotics"],
   },
   {
     title: "Effective Modern C++",
     description: "Wisdom from Scott Meyers for C+11 and C++14",
     preview: require("./images/eff_modern.jpg"),
     website: "./Software/C++/Books/eff_modern_cpp",
-    tags: ["rust", "robotics"],
+    tags: ["cpp", "computer-science"],
   },
 ];
 

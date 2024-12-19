@@ -14,6 +14,7 @@ export interface TagSearchNotesProps {
 export const TagSearchNotes: FunctionComponent<TagSearchNotesProps> = ({
   title,
   description,
+  image,
 }) => {
   return (
     <>
@@ -21,6 +22,16 @@ export const TagSearchNotes: FunctionComponent<TagSearchNotesProps> = ({
         {title}
       </Heading>
       <p className={styles.index_page_description}>{description}</p>
+      <img
+        src={image}
+        alt="Centered Image"
+        style={{
+          display: "block",
+          margin: "1rem auto",
+          maxWidth: "50%",
+          height: "auto",
+        }}
+      />
       <br />
       <TagSearchFilters />
       <div

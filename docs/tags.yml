@@ -1,21 +1,30 @@
-Robotics:
+robotics:
   label: "Robotics"
   description: "All things related to robotics and automation"
-Science:
+science:
   label: "Science"
   description: "Science-related documentation and articles"
-Mathematics:
+mathematics:
   label: "Mathematics"
   description: "Documentation related to mathematical topics"
-Misc:
+misc:
   label: "Misc"
   description: "Miscellaneous topics and documents"
-Software:
+computer-science:
   label: "Computer Science"
   description: "Topics related to software and programming"
-Manual:
+manual:
   label: "Manual"
   description: "Docs related to the this site's framework"
-Machine-Learning:
+machine-Learning:
   label: "Machine Learning"
   description: "Documentation related to machine learning"
+cpp:
+  label: "C++"
+  description: "C++"
+python:
+  label: "Python"
+  description: "Python"
+rust:
+  label: "Rust"
+  description: "Rust"
