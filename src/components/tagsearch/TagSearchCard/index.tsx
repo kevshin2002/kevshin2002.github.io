@@ -10,12 +10,7 @@ import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import Translate from "@docusaurus/Translate";
 import Image from "@theme/IdealImage";
-import {
-  ScienceTags,
-  TagList,
-  type TagType,
-  type Note,
-} from "../../../data/notes";
+import { Tags, TagList, type TagType, type Note } from "../../../data/notes";
 import { sortBy } from "../../../utils/jsUtils";
 import Heading from "@theme/Heading";
 import FavoriteIcon from "../FavoriteIcon";
@@ -39,7 +34,7 @@ function TagItem({
 }
 
 function TagSearchCardTag({ tags }: { tags: TagType[] }) {
-  const tagObjects = tags.map((tag) => ({ tag, ...ComputerScienceTags[tag] }));
+  const tagObjects = tags.map((tag) => ({ tag, ...Tags[tag] }));
 
   // Keep same order for all tags
   const tagObjectsSorted = sortBy(tagObjects, (tagObject) =>

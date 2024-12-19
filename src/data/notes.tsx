@@ -60,16 +60,27 @@ export type TagType =
   | "MATLAB";
 
 const Notes: Note[] = [
-  /*{
-    title: "Simulate a neuron with PyTorch",
-    description: "Implement neural network and simulate the all-or-none laws.",
-    preview: require("./images/Simulate-a-neuron-with-PyTorch.png"),
-    website: "./ComputerScience/simulate-a-neuron-with-pytorch",
-    source:
-      "https://colab.research.google.com/drive/1x36lSmRdi8dOPkjzhhjuF8AZbnQWOnzl?usp=sharing",
-    tags: ["pinned", "implementation", "computer-science"],
+  {
+    title: "ROS2",
+    description: "Understand how ROS2 works in C++, Python, and Rust",
+    preview: require("./images/ros2.png"),
+    website: "./Robotics/ROS2",
+    tags: ["cpp", "robotics"],
   },
-  */
+  {
+    title: "ROS2 Nav2",
+    description: "Understand how the ROS2 navigation framework (Nav2) works",
+    preview: require("./images/nav2.png"),
+    website: "./Robotics/ROS2/nav2",
+    tags: ["python", "robotics"],
+  },
+  {
+    title: "Effective Modern C++",
+    description: "Wisdom from Scott Meyers for C+11 and C++14",
+    preview: require("./images/eff_modern.jpg"),
+    website: "./Software/C++/Books/eff_modern_cpp",
+    tags: ["rust", "robotics"],
+  },
 ];
 
 export type Note = {
