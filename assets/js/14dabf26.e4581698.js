@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[7533],{219:s=>{s.exports=JSON.parse('{"tag":{"label":"robotics","permalink":"/docs/tags/robotics","allTagsPath":"/docs/tags","count":1,"items":[{"id":"Robotics/ROS2/ros2","title":"ROS2","description":"Packages","permalink":"/docs/Robotics/ROS2/"}],"unlisted":false}}')}}]);

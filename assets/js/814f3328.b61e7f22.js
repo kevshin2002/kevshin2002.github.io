@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[7472],{5513:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Purpose of Website","permalink":"/blog/thoughts","unlisted":false,"date":"2024-12-07T18:00:00.000Z"}]}')}}]);
