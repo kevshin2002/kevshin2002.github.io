@@ -1,0 +1,78 @@
+{
+  "name": "kevshin2002",
+  "version": "0.1.0",
+  "private": true,
+  "author": {
+    "name": "Kevin Shin",
+    "url": "https://kevshin2002.github.io",
+    "email": "kevshin2002@gmail.com"
+  },
+  "scripts": {
+    "postinstall": "npm run setup-hooks",
+    "setup-hooks": "git config core.hooksPath ./scripts/git-hooks",
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start --host 0.0.0.0 --port 3006",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "typecheck": "tsc",
+    "lint": "npm run eslint:check && npm run prettier:check",
+    "lint:fix": "npm run eslint:fix && npm run prettier:fix",
+    "eslint:check": "eslint . --ext .json,.js,.jsx,.ts,.tsx",
+    "prettier:check": "prettier --check .",
+    "eslint:fix": "eslint . --fix --ext .json,.js,.jsx,.ts,.tsx",
+    "prettier:fix": "prettier --write ."
+  },
+  "dependencies": {
+    "@docsearch/js": "^3.6.0",
+    "@docusaurus/core": "^3.6.3",
+    "@docusaurus/plugin-ideal-image": "^3.6.3",
+    "@docusaurus/preset-classic": "^3.6.3",
+    "@docusaurus/theme-classic": "^3.6.3",
+    "@docusaurus/theme-live-codeblock": "^3.6.3",
+    "@docusaurus/theme-search-algolia": "^3.6.3",
+    "@mdx-js/react": "^3.0.1",
+    "clsx": "^2.1.1",
+    "docusaurus-plugin-sass": "^0.2.2",
+    "framer-motion": "^11.13.1",
+    "prism-react-renderer": "^2.1.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "sass": "^1.70.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "^3.6.3",
+    "@docusaurus/tsconfig": "^3.6.3",
+    "@docusaurus/types": "^3.6.3",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "volta": {
+    "node": "20.10.0"
+  }
+}

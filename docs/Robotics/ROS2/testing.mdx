@@ -1,0 +1,230 @@
+---
+id: testing-ros2
+title: Tests
+hide_title: true
+sidebar_position: 3
+last_update:
+  date: 12/19/2024
+  author: Kevin Shin
+---
+
+## Getting Started
+
+These are my notes from the Testing with ROS course available on [The Construct](https://app.theconstruct.ai). The course is on ROS, but I referenced the ROS2 documentation in parallel to see the differences in testing framework and used ChatGPT to fill in the gaps. Since the simulator is on Ubuntu 16.04, I used the docker image `osrf/ros:humble-desktop` to simulate my own ROS2 environment.
+
+The course covers:
+
+- Unit Testing
+- Node Level Tests
+- Integration Tests
+
+## Testing Frameworks for ROS2
+
+| Testing Framework    | Language   | Purpose                                   |
+| -------------------- | ---------- | ----------------------------------------- |
+| **ament_cmake**      | C++        | Testing with Google Test (gtest/gmock)    |
+| **ament_python**     | Python     | Testing with pytest                       |
+| **Google Test**      | C++        | Unit testing with Google Test             |
+| **pytest**           | Python     | Unit testing for Python-based ROS 2 nodes |
+| **launch_testing**   | Python/C++ | Testing ROS 2 launch files                |
+| **mock, unittest**   | Python     | Unit testing with mock and unittest       |
+| **ros2-benchmarks**  | C++/Python | Performance testing in ROS 2              |
+| **Cucumber, Behave** | Python     | Behavior-driven testing (BDD)             |
+
+### Unit Tests
+
+There are library unit tests and ROS2 unit tests. Library unit tests do not test any ROS2-related issues and are done via `unittest` or `gtest`. ROS2 unit tests can be done with `unittest` or `gtest` and are for testing ROS2 code for a single node. It'll test its external API such as publishing or subscribing.
+
+### Integration Tests
+
+Integration tests start up multiple nodes to ensure they all work together as needed. This is done again using `unittest` and `gtest`.
+
+## Library Unit Tests
+
+We'll be using the code below to learn about testing in ROS2.
+
+```py
+#!/usr/bin/env python3
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
+import time
+
+class RobotControl(Node):
+
+    def __init__(self):
+        super().__init__('robot_control_node')
+        self.vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.cmd = Twist()
+        self.ctrl_c = False
+        self.rate = self.create_rate(10)
+        self.create_timer(0.1, self.shutdownhook)
+
+    def publish_once_in_cmd_vel(self):
+        """
+        Publish a single Twist message to ensure command receipt.
+        """
+        while not self.ctrl_c:
+            if self.vel_publisher.get_subscription_count() > 0:
+                self.vel_publisher.publish(self.cmd)
+                self.get_logger().info("Command published")
+                break
+            else:
+                self.rate.sleep()
+
+    def shutdownhook(self):
+        self.stop_robot()
+        self.ctrl_c = True
+
+    def stop_robot(self):
+        self.cmd.linear.x = 0.0
+        self.cmd.angular.z = 0.0
+        self.publish_once_in_cmd_vel()
+
+    def get_inputs_rotate(self):
+        angular_speed = float(input('Enter angular speed (degrees/sec): '))
+        angle = float(input('Enter angle (degrees): '))
+        clockwise = input('Rotate clockwise? (y/n): ').strip().lower() == 'y'
+        return angular_speed, angle, clockwise
+
+    def convert_degree_to_rad(self, speed_deg, angle_deg):
+        return speed_deg * 3.141592653589793 / 180, angle_deg * 3.141592653589793 / 180
+
+    def rotate(self):
+        angular_speed_d, angle_d, clockwise = self.get_inputs_rotate()
+        angular_speed_r, angle_r = self.convert_degree_to_rad(angular_speed_d, angle_d)
+
+        self.cmd.angular.z = -angular_speed_r if clockwise else angular_speed_r
+
+        start_time = self.get_clock().now()
+        current_angle = 0.0
+
+        while current_angle < angle_r:
+            self.vel_publisher.publish(self.cmd)
+            elapsed_time = self.get_clock().now() - start_time
+            current_angle = angular_speed_r * elapsed_time.nanoseconds * 1e-9
+            self.rate.sleep()
+
+        self.stop_robot()
+
+def main(args=None):
+    rclpy.init(args=args)
+    robot_control = RobotControl()
+    try:
+        robot_control.rotate()
+    except KeyboardInterrupt:
+        robot_control.get_logger().info("Shutting down gracefully.")
+    finally:
+        robot_control.destroy_node()
+        rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+In order to set up library unit tests, we have to create a test directory in our package. We can then create a random file. The code to test the above code for core python functionality is below.
+
+```py
+#!/usr/bin/env python3
+
+import unittest
+import rclpy
+from robot_control_py.robot_control import RobotControl  # Adjust the import based on your ROS 2 package structure
+
+class TestRobotControl(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls): # Part of the unittest framework where we override to specify logic when we instantiate the Test Node.
+        """Initialize rclpy once for the entire test class."""
+        rclpy.init()
+
+    @classmethod
+    def tearDownClass(cls): # Part of the unittest framework where we override to specify logic for shutting down
+        """Shutdown rclpy once after all tests are complete."""
+        rclpy.shutdown()
+
+    def setUp(self): # Applies to each individual test cases and is ran before each test.
+        """Set up the test environment by creating a RobotControl node."""
+        self.rc = RobotControl()
+
+    def tearDown(self): # Applies to each after individual test case.
+        """Clean up resources after each test."""
+        self.rc.destroy_node()
+
+    def test_deg_rad_conversion(self):
+        """Test degree-to-radian conversion."""
+        speed, angle = self.rc.convert_degree_to_rad(60, 90)
+        self.assertAlmostEqual(speed, 1.0472, places=4, msg="Speed conversion failed")
+        self.assertAlmostEqual(angle, 1.57, places=2, msg="Angle conversion failed")
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+We can run this with just the python interpreter but we can also integrate it to our ROS2 package by configuring our CMakeLists, package.xml, and setup.py file.
+
+#### CMakeList
+
+```txt
+if(BUILD_TESTING)
+    find_package(ament_cmake_pytest REQUIRED)
+    ament_add_pytest_test(test_robot_control test/test_robot_control.py)
+endif()
+```
+
+#### package.xml
+
+```txt
+<test_depend>ament_cmake_pytest</test_depend>
+```
+
+#### setup.py
+
+```py
+(os.path.join('share', package_name, 'test'), glob('test/*.py'))
+```
+
+```bash
+python3 test_robot_control.py # Run without ROS2 environment
+colcon test --packages-select <package_name> # Run with ROS2 environment
+```
+
+The outputs for success and failing:
+
+```text
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.024s
+
+OK
+
+######################################################################
+
+F
+======================================================================
+FAIL: test_deg_rad_conversion (__main__.TestRobotControl)
+Test degree-to-radian conversion.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/ros2_ws/src/robot_control_py/test/test_robot_control.py", line 30, in test_deg_rad_conversion
+    self.assertAlmostEqual(speed, 1.0472, places=4, msg="Speed conversion failed")
+AssertionError: 0.5235987755982988 != 1.0472 within 4 places (0.5236012244017011 difference) : Speed conversion failed
+
+----------------------------------------------------------------------
+Ran 1 test in 0.023s
+
+FAILED (failures=1)
+```
+
+If ran with colcon:
+
+```bash
+colcon test --packages-select robot_control_py
+Starting >>> robot_control_py
+Finished <<< robot_control_py [0.63s]
+Summary: 1 package finished [0.83s]
+root@9f3977f822c1:/ros2_ws# colcon test-result --verbose
+Summary: 1 test, 0 errors, 0 failures, 0 skipped
+```

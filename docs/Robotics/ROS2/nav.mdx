@@ -1,0 +1,312 @@
+---
+id: nav2
+title: Nav2
+hide_title: true
+sidebar_position: 1
+last_update:
+  date: 12/18/2024
+  author: Kevin Shin
+---
+
+import Map from "@site/static/img/map.jpg";
+import Mapped from "@site/static/img/Mapped.jpg";
+
+## Getting Started
+
+These are my notes from the ROS2 Navigation course available on [The Construct](https://app.theconstruct.ai). As this is a robotics note, you will need physical hardware components to follow along.Before each section though, I will list what is required before starting.
+
+## Map
+
+A map is a representation of the environment that the robot is functioning in. It uses the map to localize and plan trajectories. Maps are implemented in ROS2 via an occupancy grid where in each ccell, specific values represent obstacles.
+
+### Requirements
+
+Before starting, we need a robot with LIDAR and Odometry. We also need to use SLAM for localizing. Available ones are cartographer and SLAM-Toolbox. This note uses cartographer as the learning curve is lower. It is notable that cartographer is no longer maintained, so the better software to use is SLAM-Toolbox.
+
+Cartographer is a system that provides real-time simultaneous localization and mapping (SLAM) in both 2D and 3D across multiple platforms and sensor configurations. Cartographer_ros is a ROS wrapper of cartographer so that we can integrate cartographer with ROS. This allows us to use prebuilt packages and only have to configure them.
+
+![cartographer_2d](https://google-cartographer-ros.readthedocs.io/en/latest/_images/demo_2d.gif)
+
+### Configuring Cartographer
+
+We use a launch file because we can start multiple nodes and can also set a node-specific parameter while launching a node. These parameters can then be loaded from a YAML file or specified in the launch file.
+
+To launch `cartographer`, we need to launch two nodes:
+
+```py
+import os
+from ament_index_python.packages import get_package_share_directory
+
+cartographer_config_dir = os.path.join(get_package_share_directory('cartographer_slam'), 'config')
+
+Node(
+    package='cartographer_ros',
+    executable='cartographer_node',
+    name='cartographer_node',
+    output='screen',
+    parameters=[{'use_sim_time': True}], # boolean indicating node synchronization time with simulation time
+    arguments=['-configuration_directory', cartographer_config_dir,
+               '-configuration_basename', configuration_basename]
+    # configuration_directory specifies where the configuration files are
+    # configuration_basename specifies the configuration file name
+    ),
+Node(
+    package='cartographer_ros',
+    executable='cartographer_occupancy_grid_node',
+    output='screen',
+    name='occupancy_grid_node',
+    parameters=[{'use_sim_time': True}],
+    arguments=['-resolution', '0.05', '-publish_period_sec', '1.0']
+    # resolution specifies number of meters per grid in the map
+    # publish_period_sec specifies frequency of publishing to /map topic
+    )
+```
+
+We then create a LUA file named `cartographer.lua` within the config directory.
+
+```lua
+include "map_builder.lua"
+include "trajectory_builder.lua"
+
+options = {
+  map_builder = MAP_BUILDER,
+  trajectory_builder = TRAJECTORY_BUILDER,
+  map_frame = "map",
+  tracking_frame = "base_footprint",
+  published_frame = "odom",
+  odom_frame = "odom",
+  provide_odom_frame = false,
+  publish_frame_projected_to_2d = true,
+  use_odometry = true,
+  use_nav_sat = false,
+  use_landmarks = false,
+  num_laser_scans = 1,
+  num_multi_echo_laser_scans = 0,
+  num_subdivisions_per_laser_scan = 1,
+  num_point_clouds = 0,
+  lookup_transform_timeout_sec = 0.2,
+  submap_publish_period_sec = 0.3,
+  pose_publish_period_sec = 5e-3,
+  trajectory_publish_period_sec = 30e-3,
+  rangefinder_sampling_ratio = 1.,
+  odometry_sampling_ratio = 1.,
+  fixed_frame_pose_sampling_ratio = 1.,
+  imu_sampling_ratio = 1.,
+  landmarks_sampling_ratio = 1.,
+}
+
+MAP_BUILDER.use_trajectory_builder_2d = true
+
+TRAJECTORY_BUILDER_2D.min_range = 0.12
+TRAJECTORY_BUILDER_2D.max_range = 3.5
+TRAJECTORY_BUILDER_2D.missing_data_ray_length = 3.0
+TRAJECTORY_BUILDER_2D.use_imu_data = false
+TRAJECTORY_BUILDER_2D.use_online_correlative_scan_matching = true
+TRAJECTORY_BUILDER_2D.motion_filter.max_angle_radians = math.rad(0.1)
+
+POSE_GRAPH.constraint_builder.min_score = 0.65
+POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7
+
+-- POSE_GRAPH.optimize_every_n_nodes = 0
+
+return options
+```
+
+Make sure that within setup.py, we specify the new config and lua directories. If you're using C++, make sure to specify the DIRECTORIES within CMakeList.
+
+```py
+(os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+(os.path.join('share', package_name, 'config'), glob('config/*')),
+```
+
+```cpp
+install(DIRECTORY
+    launch
+    config
+    DESTINATION share/${PROJECT_NAME}/
+)
+```
+
+We can then compile the package and launch the launch file. We can then run rviz2 on another terminal while this is running.
+
+To display our mapping, add the `map` display and set the topic to `/map`. If the mapping isn't showing, then the Quality of Service (QoS) parameters of the `/map` may be wrong. We can add a couple more displays.
+
+- `TF`: Allows us to see the frames of the robot
+- `LaserScan`: Allows us to see the laser coliding with the objects on the map
+
+:::note
+These are all specific to the hardware configurations the construct provides
+:::
+
+<img src={Map.src} width="100%" />
+
+After moving and mapping around, we'll have our entire domain.
+
+<img src={Mapped.src} width="100%" />
+
+### Different Configurations
+
+Cartographer works for many robots and sensors but must be configured properly to work optimally. By default, cartographer automatically subscribes to `/scan, /odom, /imu` topics. All configurations can be given from the Lua configuration file.This means that in the launch files, we have to remap those three if we want to publish data to them.
+
+```py
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='cartographer_ros',
+            executable='cartographer_node',
+            name='cartographer',
+            remappings=[
+                ('/scan', '/my_laser_scan'),
+                ('/odom', '/my_odom'),
+                ('/imu', '/my_imu')
+            ]
+        )
+    ])
+```
+
+| **Category**           | **Parameter**                                   | **Description**                                                                                   | **Default**           |
+| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------- |
+| **Frames**             | `map_frame`                                     | ROS frame ID for publishing sub-maps, the parent frame of poses.                                  | `map`                 |
+|                        | `tracking_frame`                                | Frame ID tracked by SLAM. IMU position if used, commonly `base_link` or `base_footprint`.         | `base_link`           |
+|                        | `published_frame`                               | Child frame for publishing poses. If `odom` provided, it publishes pose of `odom` in `map_frame`. | `odom` or `base_link` |
+|                        | `odom_frame`                                    | Frame for publishing local SLAM result if `provide_odom_frame` is true.                           | `odom`                |
+|                        | `provide_odom_frame`                            | Publishes local non-loop-closed pose as `odom_frame` in `map_frame` if enabled.                   | `true`                |
+|                        | `use_odometry`                                  | Subscribes to `nav_msgs/Odometry` on `odom` topic and includes odometry in SLAM.                  | `true`                |
+|                        | `use_nav_sat`                                   | Subscribes to `sensor_msgs/NavSatFix` on `fix` topic and includes navigation data in SLAM.        | `true`                |
+| **Laser Parameters**   | `num_laser_scans`                               | Number of laser scan topics to subscribe to.                                                      | `1`                   |
+|                        | `num_multi_echo_laser_scans`                    | Number of multi-echo laser scan topics to subscribe to.                                           | `0`                   |
+|                        | `num_subdivisions_per_laser_scan`               | Number of point clouds to split each laser scan for unwarping during motion.                      | `1`                   |
+|                        | `num_point_clouds`                              | Number of point cloud topics to subscribe to.                                                     | `1`                   |
+| **Filter Parameters**  | `lookup_transform_timeout_sec`                  | Timeout in seconds for looking up transforms using tf2.                                           | `0.2`                 |
+|                        | `submap_publish_period_sec`                     | Interval in seconds to publish submap poses.                                                      | `0.3`                 |
+|                        | `pose_publish_period_sec`                       | Interval in seconds to publish poses (e.g., 5e-3 for 200 Hz).                                     | `5e-3`                |
+|                        | `trajectory_publish_period_sec`                 | Interval in seconds to publish trajectory markers (e.g., 30e-3 for 30 ms).                        | `30e-3`               |
+|                        | `odometry_sampling_ratio`                       | Sampling ratio for odometry messages.                                                             | `1.0`                 |
+|                        | `fixed_frame_sampling_ratio`                    | Sampling ratio for fixed frame messages.                                                          | `1.0`                 |
+|                        | `imu_sampling_ratio`                            | Sampling ratio for IMU messages.                                                                  | `1.0`                 |
+|                        | `landmarks_sampling_ratio`                      | Sampling ratio for landmark messages.                                                             | `1.0`                 |
+| **Trajectory Builder** | `TRAJECTORY_BUILDER_2D.min_range`               | Minimum distance measured to be considered for mapping.                                           | `0.2`                 |
+|                        | `TRAJECTORY_BUILDER_2D.max_range`               | Maximum distance measured to be considered for mapping.                                           | `30.0`                |
+|                        | `TRAJECTORY_BUILDER_2D.missing_data_ray_length` | Distance to treat as a lost laser ray.                                                            | `25.0`                |
+|                        | `TRAJECTORY_BUILDER_2D.use_imu_data`            | Whether or not to use IMU data.                                                                   | `true`                |
+
+If we want to save the map that we mapped out, we can run an executable named `map_saver` from `nav2_map_server`. It's important that we call this within the directory that we want to save the map in. The cartography has to be running for this to work.
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f <name>
+```
+
+This'll generate two files of type `.pgm and .yaml`. The `.pgm` is an image file of the map as an occupancy grid image. The `.yaml` contains details about the resolution of the map.
+
+Example:
+
+```yaml
+image: turtlebot_area.pgm
+mode: trinary
+resolution: 0.05 # Resolution of the map (meters/pixel)
+origin: [-3.8, -1.84, 0] # Coordinates of the lower-left pixel on the map (x,y,z). The third value indicates rotation and if there is none, value is 0
+negate: 0 # Inverts the color of the map.
+occupied_thresh: 0.65 # Pixels with a value greater than this value will be considered an occupied zone
+free_thresh: 0.25 # Pixels with a value smaller than this will be considered a completely free zone
+```
+
+### Using Saved Map
+
+If we want to use this saved map, we have to launch `map_server` and `nav2_lifecycle_manager`. We can create a custom launch file for this, but we must specify some parameters.
+
+```py
+from launch import LaunchDescription
+from launch_ros.actions import Node
+frmo ament_index_python.packages import get_package_share_directory
+import os
+
+def generate_launch_description():
+    map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area.yaml')
+    return LaunchDescription([
+        Node(
+            package="nav2_map_server",
+            executable="map_server",
+            name="map_server",
+            output="screen",
+            parameters=[{'use_sim_time': True}, # Boolean indicating if map_server must synchronize with its time with the simulation
+                        {'yaml_filename':map_file] # The complete path to the map yaml file
+            ),
+        Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager_mapper",
+            output="screen",
+            parameters=[{'use_sim_time': True},
+                        {'autostart': True}, # lifecycle manager autostart when launched
+                        {'node_names':  ['map_server']}] # Nodes that the lifecycle manager takes care of
+            )
+        ])
+```
+
+We can try using our saved map by creating a ROS2 package called map_server, placing our saved map files inside of config, and creating our launch file. Note that we can just put our launch file in any package and just create a new launch file with our configs.
+
+## Nav2 Lifecycle Manager
+
+Navigation nodes are managed nodes meaning that they can be easily controlled to be restarted, paused, or running. They can do so by being at these states:
+
+- Unconfigured
+- Inactive
+- Active
+- Finalized
+
+The diagram is taken from the course and depicts how nodes transition from one state to another. Seems to be like a state machine.
+![Node Transition](https://s3.eu-west-1.amazonaws.com/notebooks.ws/ros2-navigation-humble-148/images/lifecycle.png)
+
+Managed nodes start at the `unconfigured` state and is active usually when running. To transition to `active`, nodes need an external agent that moves them to this state. Several nodes in Nav2, such as `map_server`, `amcl`, `planner_server`, and `controller_server`, are lifecycle enabled meaning they are managed nodes.
+
+These nodes have the required overrides of the lifecycle functions:
+
+- on_configure()
+- on_activate()
+- on_deactivate()
+- on_cleanup()
+- on_shutdown()
+- on_error()
+
+### Lifecycle Manager
+
+In Nav2, the external agent that helps transition nodes to an active state is called the `nav2_lifecycle_manager`. The lifecycle manager changes the state of the managed nodes to achieve a controlled startup, shutdown, reset, pause, or resume of the navigation stack.
+
+Referenced from Steve Macenski
+
+![Figure](https://s3.eu-west-1.amazonaws.com/notebooks.ws/ros2-navigation-humble-148/images/diagram_lifecycle_manager.png)
+
+Nav2 uses a wrapper of `LifecycleNode`, the `nav2_util LifecycleNode` and it hides many abstractions of LifecycleNodes for typical applications. It includes a bond connection for the `lifecycle manager` to ensure that after a node transitions up, it also remains active. When a node crashes, it lets the `lifecycle manager` know and transitions down the system to prevent a critical failure.
+
+The `nav2_lifecycle_manager` provides a ROS service from which other ROS nodes can invoke the startup, shutdown, reset, pause, or resume functions. Based on these requests, the `nav2_lifecycle_manager` calls the necessary lifecycle services in the managed nodes. As shown previously in the `nav2_lifecycle_manager` node within the launch file, we specify which nodes need management via `node_names`. The ordering matters as that is the order in which they have to be moved to initialized (first to last) and the order in which they are paused and stopped (last to first).
+
+It's important that the manager has the `autostart` parameter which allows the `nav2_lifecycle_manager` to do it's default behavior.
+
+You interact with the `nav2_lifecycle_manager` via a service named:
+
+```bash
+/<lifecycle_manager_node_name>/manage_nodes
+
+ros2 service call /lifecycle_manager/manage_nodes nav2_msgs/srv/ManageLifecycleNodes "{command: 0}" # Start the nodes
+ros2 service call /lifecycle_manager/manage_nodes nav2_msgs/srv/ManageLifecycleNodes "{command: 1}" # Pause the nodes
+ros2 service call /lifecycle_manager/manage_nodes nav2_msgs/srv/ManageLifecycleNodes "{command: 2}" # Resume the nodes
+ros2 service call /lifecycle_manager/manage_nodes nav2_msgs/srv/ManageLifecycleNodes "{command: 3}" # Reset the nodes
+ros2 service call /lifecycle_manager/manage_nodes nav2_msgs/srv/ManageLifecycleNodes "{command: 4}" # Shutdown the nodes
+```
+
+This is because the service `/manage_nodes` uses the message `nav2_msgs/srv/ManageLifecycleNodes` which is as follows:
+
+```txt
+uint8 STARTUP = 0
+uint8 PAUSE = 1
+uint8 RESUME = 2
+uint8 RESET = 3
+uint8 SHUTDOWN = 4
+
+uint8 command
+---
+bool success
+```

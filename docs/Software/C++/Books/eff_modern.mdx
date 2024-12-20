@@ -1,0 +1,23 @@
+---
+id: eff_modern_cpp
+title: Effective Modern C++
+hide_title: true
+sidebar_position: 1
+last_update:
+  date: 12/18/2024
+  author: Kevin Shin
+---
+
+## Preface
+
+The note is based off of Scott Meyers famous book titled "Effective Modern C++". In it, he details the workings of C+11 and C+14 and how to become a better software engineer.
+
+## Deducing Types
+
+In C++98, there was a single set of rules for type deduction which was for function templates. In C++11, those rules were modified and extended: one for `auto`, and another for `decltype`. C++14 extended the usage for `auto` and `decltype`. I am guilty of using the keyword `auto` frequently without realizing the underlying implementation that makes it possible. This is because it minimizes having to type out the type constantly as changing the type at initialization can propagate throughout the program. Despite that, the types deduced by the compiler via the usage `auto` may not be as what we want it to be.
+
+As such, the only way to be effective at using `auto` is to understand how it works. This section explains template type deduction, building `auto` on top of it, and the tangent of `decltype`. Scott also explains how we can force compilers to make the results of their type deduction visible, and allows us to guarantee that the compilers are deducing the types we want them to be deducing.
+
+### Understanding template type deduction
+
+C++ developers are guilty of using templates without knowing how it works. The reality is that the rules for template type deduction are employed by the `auto` keyword.

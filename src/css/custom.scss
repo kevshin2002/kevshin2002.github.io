@@ -1,0 +1,245 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap");
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+}
+
+.pagination-nav {
+  display: none;
+}
+
+table {
+  display: contents;
+}
+
+.sub-heading {
+  grid-column: 1 / -1;
+
+  h3 {
+    margin-bottom: 10px;
+  }
+}
+
+.front-matter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 40px;
+  grid-column: 1 / -1;
+
+  iframe {
+    aspect-ratio: 16 / 9;
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@font-face {
+  font-family: "Source Sans Pro";
+  src: url("../fonts/SourceSansPro/SourceSansPro-Regular.otf");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../fonts/JetBrainsMono/JetBrainsMono-Regular.woff2");
+}
+
+/* You can override the default Infima variables here. */
+:root {
+  --pk-blue: #091533;
+  --pk-green: white;
+
+  --ifm-color-primary: var(--pk-blue);
+  --ifm-color-primary-dark: #00162c;
+  --ifm-color-primary-darker: #000f30;
+  --ifm-color-primary-darkest: #000d22;
+  --ifm-color-primary-light: #49a88d;
+  --ifm-color-primary-lighter: #70cdb3;
+  --ifm-color-primary-lightest: #91ffe0;
+  --ifm-code-font-size: 95%;
+  --ifm-font-color: var(--ifm-color-primary-darkest);
+  --ifm-font-family-base: "Inter", sans-serif;
+  --ifm-font-size-base: 16px;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  --ifm-footer-background-color: black;
+  --ifm-footer-padding-vertical: calc(var(--ifm-spacing-vertical) * 3);
+  --ifm-footer-title-color: white;
+  --ifm-footer-color: #515956;
+
+  --ifm-global-radius: 0.3rem;
+  --docusaurus-announcement-bar-height: auto !important;
+
+  --ifm-background-color: #ffffff;
+  --ifm-overview-card-background-color: var(--ifm-background-color);
+}
+
+@media (max-width: 1920px) {
+  div.navbar__items.navbar__items--right > * {
+    display: block;
+    position: inherit;
+  }
+}
+
+div[class^="announcementBar"][role="banner"] {
+  border-bottom-color: var(--deepdark);
+  font-family: "JetBrains Mono", monospace;
+  button.close {
+    svg {
+      fill: white;
+    }
+  }
+}
+
+div[class^="announcementBarContent"] {
+  line-height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: "JetBrains Mono", monospace;
+  padding: 4px 30px;
+
+  a {
+    text-decoration: underline;
+    display: inline-block;
+    color: var(--brand) !important;
+
+    &:hover {
+      color: var(--ifm-color-primary) !important;
+    }
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .announcement {
+    font-size: 18px;
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .announcement {
+    font-size: 15px;
+    line-height: 22px;
+    padding: 6px 30px;
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme="dark"] {
+  --ifm-color-primary: var(--pk-green);
+  --ifm-link-color: var(--ifm-color-primary);
+  --ifm-font-color: #ffffff;
+  --ifm-color-primary-dark: #a2fedb;
+  --ifm-color-primary-darker: #5ddaaa;
+  --ifm-color-primary-darkest: #2db983;
+  --ifm-color-primary-light: #79d8c4;
+  --ifm-color-primary-lighter: #9df1df;
+  --ifm-color-primary-lightest: #b7faec;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] {
+  --ifm-background-color: #101010;
+  --ifm-background-surface-color: #101010;
+
+  .navbar {
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  }
+}
+
+.footer {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+
+  &__bottom {
+    margin-top: 4rem;
+  }
+}
+
+.button--outline {
+  &:focus {
+    --ifm-button-background-color: var(--ifm-button-border-color);
+  }
+
+  &.button--primary:focus {
+    --ifm-button-color: var(--ifm-font-color-base-inverse);
+  }
+}
+
+.button__icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  margin-right: 0.5rem;
+  position: relative;
+  top: 3px;
+  fill: var(--ifm-button-color);
+
+  .button--secondary & {
+    fill: var(--ifm-color-gray-900);
+
+    [data-theme="dark"] & {
+      fill: var(--ifm-font-color-base);
+    }
+  }
+
+  .button--outline:hover &,
+  .button--outline:active &,
+  .button--outline:focus &,
+  .button--outline.button--active & {
+    [data-theme="dark"] & {
+      fill: var(--ifm-font-color-base-inverse);
+    }
+  }
+}
+
+.DocSearch {
+  [data-theme="light"] & {
+    /* --docsearch-primary-color: var(--ifm-color-primary); */
+    /* --docsearch-text-color: var(--ifm-font-color-base); */
+    --docsearch-muted-color: var(--ifm-color-secondary-darkest);
+    --docsearch-container-background: rgba(94, 100, 112, 0.7);
+    /* Modal */
+    --docsearch-modal-background: var(--ifm-color-secondary-lighter);
+    /* Search box */
+    --docsearch-searchbox-background: var(--ifm-color-secondary);
+    --docsearch-searchbox-focus-background: var(--ifm-color-white);
+    /* Hit */
+    --docsearch-hit-color: var(--ifm-font-color-base);
+    --docsearch-hit-active-color: var(--ifm-color-white);
+    --docsearch-hit-background: var(--ifm-color-white);
+    /* Footer */
+    --docsearch-footer-background: var(--ifm-color-white);
+  }
+
+  [data-theme="dark"] & {
+    --docsearch-text-color: var(--ifm-font-color-base);
+    --docsearch-muted-color: var(--ifm-color-secondary-darkest);
+    --docsearch-container-background: rgba(47, 55, 69, 0.7);
+    /* Modal */
+    --docsearch-modal-background: var(--ifm-background-color);
+    /* Search box */
+    --docsearch-searchbox-background: var(--ifm-color-emphasis-100);
+    --docsearch-searchbox-focus-background: var(--ifm-color-black);
+    /* Hit */
+    --docsearch-hit-color: var(--ifm-font-color-base);
+    --docsearch-hit-active-color: var(--ifm-color-black);
+    --docsearch-hit-background: var(--ifm-color-emphasis-100);
+    /* Footer */
+    --docsearch-footer-background: var(--ifm-background-surface-color);
+    --docsearch-key-gradient: linear-gradient(
+      -26.5deg,
+      var(--ifm-color-emphasis-200) 0%,
+      var(--ifm-color-emphasis-100) 100%
+    );
+  }
+}
