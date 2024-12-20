@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Kevin Shin, Electrical Engineer Blog</title>
+        <link>https://kevshin2002.github.io/blog</link>
+        <description>Kevin Shin, Electrical Engineer Blog</description>
+        <lastBuildDate>Sat, 07 Dec 2024 18:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
+        <copyright>Copyright © 2024 Kevin Shin. All rights reserved.</copyright>
+        <item>
+            <title><![CDATA[Purpose of Website]]></title>
+            <link>https://kevshin2002.github.io/blog/thoughts</link>
+            <guid>https://kevshin2002.github.io/blog/thoughts</guid>
+            <pubDate>Sat, 07 Dec 2024 18:00:00 GMT</pubDate>
+            <description><![CDATA[So today, while finishing up my documentations for my ECE 148 class at UCSD, I ended up getting stumbled away and watching a video about putting thoughts into motion. It summed up perfectly why I decided on a website this format.]]></description>
+            <content:encoded><![CDATA[<p>So today, while finishing up my <strong><a href="https://ucsd-ecemae-148.github.io/fall-2024-final-project-team-2/" target="_blank" rel="noopener noreferrer">documentations</a></strong> for my ECE 148 class at UCSD, I ended up getting stumbled away and watching a video about putting thoughts into motion. It summed up perfectly why I decided on a website this format.</p>
+<iframe width="680" height="315" src="https://www.youtube.com/embed/xSBGYoS6z68?si=NyfMsAe4IG4YhT-4" title="Why You Struggle to Follow Through (Thinkers vs Doers)" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<p>Since you probably don't want to watch all 26 minutes of the video, I'll summarize it below.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="overview">Overview<a href="https://kevshin2002.github.io/blog/thoughts#overview" class="hash-link" aria-label="Direct link to Overview" title="Direct link to Overview">​</a></h3>
+<p>How is it that some people are just better than others? Some might say talent or skill, but it's actually just continued exposure. You might ask think that if it's so simple, why is everyone so average?
+It could do with various factors such as socioeconomics and lack of opportunity, but the fundamental reason is that most of us lose interest over time in the things we do.</p>
+<p>So how do we combat this? Well, the video discusses the 4 different phases in developing an intrinsic motivation for the things we do.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="triggered-situational-interest">Triggered Situational Interest<a href="https://kevshin2002.github.io/blog/thoughts#triggered-situational-interest" class="hash-link" aria-label="Direct link to Triggered Situational Interest" title="Direct link to Triggered Situational Interest">​</a></h3>
+<p>This is the first stage of developing our interest, and it's actually just our curiosity. We can't intentionally create curiosity within ourselves and is something that we can't artificially create.
+At this stage, we might try to learn more about the topic. If it's advanced academia, we might read a book on it, or if it's cooking, we might try following a recipe. It's the phase where we survey out for more external exposure to the topic.</p>
+<p>What's important here is that negative feedback can actually crush our confidence. Since we're new to the topic, negative feedback can hurt our curiosity and make us not pursue it. It's like watering a newly ignited torch.
+Some people attribute negative feedback at this stage as the Dunning-Kruger effect.</p>
+<img src="https://kevshin2002.github.io/assets/ideal-img/dunning-kruger.0a2af83.500.jpg" width="960" alt="Dunning Kruger">
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="maintained-situational-interest">Maintained Situational Interest<a href="https://kevshin2002.github.io/blog/thoughts#maintained-situational-interest" class="hash-link" aria-label="Direct link to Maintained Situational Interest" title="Direct link to Maintained Situational Interest">​</a></h3>
+<p>This is the phase where we want to maintain our interest by being around with people, examples, and other external exposures of the topic. It's really not different than a continuous tab on the interest topic. This is the code equivalent of read a book on the topic.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="emerging-individual-interest">Emerging Individual Interest<a href="https://kevshin2002.github.io/blog/thoughts#emerging-individual-interest" class="hash-link" aria-label="Direct link to Emerging Individual Interest" title="Direct link to Emerging Individual Interest">​</a></h3>
+<p>This is the phase where we want to do internal reflections and theory craft. Theory crafting can mean how you can improve or see modifications of said topic. In cooking, you can ask how you can cook x in y way with z ingredients.</p>
+<p>The more we theory craft, the more we actually wanna do more of it. The important part is that if we only pursue external knowledge and not do anything intrinsic, we won't change. This is the stage where we want to actually apply the knowledge we've learned and learn from the mistakes.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="well-developed-individual-interest">Well Developed Individual Interest<a href="https://kevshin2002.github.io/blog/thoughts#well-developed-individual-interest" class="hash-link" aria-label="Direct link to Well Developed Individual Interest" title="Direct link to Well Developed Individual Interest">​</a></h3>
+<p>At this stage, you can understand the theory crafting of someone else. You can understand how someone arrived at this conclusion or how someone made that analysis. You can jump into something and understand what's going on.
+It's actually at this stage that feedback is the most significant. Early feedback can squash any confidence but feedback here can help in theory crafting because you know factually and logically some of the ins and outs of the topic.</p>
+<p>This is what most people often do as they'll do something advanced and not understand anything. It's oftentimes best to start from the foundations and start beginning.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="relation-to-website">Relation To Website<a href="https://kevshin2002.github.io/blog/thoughts#relation-to-website" class="hash-link" aria-label="Direct link to Relation To Website" title="Direct link to Relation To Website">​</a></h3>
+<p>Now that I've summarized the video for you, let's talk about how it relates to my personal website. I'm quite young, and at the time of writing this, I'll be turning 23 in April. I know for sure that the decades ahead of me will be full of learning, challenges, and opportunities.</p>
+<p>I want to document this journey on my website as well as showcase all of the cool things I've done. In fact, it's actually a challenge to keep a tab on one of my interest each day and write about it. If you see this a few years, heck even a few decades, I hope that my journey has matched what I've ambitioned.</p>]]></content:encoded>
+            <category>growth</category>
+            <category>mindset</category>
+        </item>
+    </channel>
+</rss>
