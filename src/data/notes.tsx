@@ -48,7 +48,7 @@ export type TagType =
   | "paper-reading"
   | "proof-of-concept"
   | "analysis"
-
+  | "Embedded"
   // topics
   | "algorithm"
 
@@ -80,6 +80,36 @@ const Notes: Note[] = [
     preview: require("./images/eff_modern.jpg"),
     website: "./Software/C++/Books/eff_modern_cpp",
     tags: ["cpp", "computer-science"],
+  },
+  {
+    title: "ROS2 Testing",
+    description:
+      "Learn how to test ROS2 with unit and integration testing via pytest/gtest",
+    preview: require("./images/ros2_test.jpg"),
+    website: "./Robotics/ROS2/testing-ros2",
+    tags: ["cpp", "python", "robotics"],
+  },
+  {
+    title: "URDF",
+    description:
+      "Learn how software communicate using a unified modeling format",
+    preview: require("./images/urdf.png"),
+    website: "./Robotics/ROS2/urdf",
+    tags: ["cpp", "robotics"],
+  },
+  {
+    title: "Zephyr",
+    description: "Follow my learning journey for Zephyr, an open source RTOS",
+    preview: require("./images/zephyr.jpeg"),
+    website: "./Robotics/RTOS/zephyr",
+    tags: ["cpp", "embedded"],
+  },
+  {
+    title: "ROS2 Perception",
+    description: "Understand how to use ROS2 and computer vision for robotics",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["cpp", "robotics", "machine_learning"],
   },
 ];
 
@@ -143,7 +173,14 @@ export const Tags: { [type in TagType]: Tag } = {
     }),
     color: "#2DD48F",
   },
-
+  embedded: {
+    label: translate({ message: "Embedded" }),
+    description: translate({
+      message: "Anything embedded goes here",
+      id: "tagsearch.tag.embedded.description",
+    }),
+    color: "#0598ce",
+  },
   misc: {
     label: translate({ message: "Misc" }),
     description: translate({

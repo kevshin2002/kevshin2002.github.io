@@ -16,7 +16,7 @@ const config: Config = {
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
-
+  deploymentBranch: "gh-pages",
   // GitHub pages deployment config
   organizationName: "kevshin2002",
   projectName: "kevshin2002.github.io",

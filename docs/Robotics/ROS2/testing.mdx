@@ -1,12 +1,15 @@
 ---
 id: testing-ros2
-title: Tests
+title: Testing
 hide_title: true
 sidebar_position: 3
 last_update:
-  date: 12/19/2024
+  date: 12/21/2024
   author: Kevin Shin
 ---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 ## Getting Started
 
@@ -20,16 +23,14 @@ The course covers:
 
 ## Testing Frameworks for ROS2
 
-| Testing Framework    | Language   | Purpose                                   |
-| -------------------- | ---------- | ----------------------------------------- |
-| **ament_cmake**      | C++        | Testing with Google Test (gtest/gmock)    |
-| **ament_python**     | Python     | Testing with pytest                       |
-| **Google Test**      | C++        | Unit testing with Google Test             |
-| **pytest**           | Python     | Unit testing for Python-based ROS 2 nodes |
-| **launch_testing**   | Python/C++ | Testing ROS 2 launch files                |
-| **mock, unittest**   | Python     | Unit testing with mock and unittest       |
-| **ros2-benchmarks**  | C++/Python | Performance testing in ROS 2              |
-| **Cucumber, Behave** | Python     | Behavior-driven testing (BDD)             |
+| Testing Framework    | Language   | Purpose                                                    |
+| -------------------- | ---------- | ---------------------------------------------------------- |
+| **Google Test**      | C++        | Unit testing with Google Test                              |
+| **pytest**           | Python     | Unit testing for Python-based ROS 2 nodes and library code |
+| **launch_testing**   | Python/C++ | Testing ROS 2 launch files                                 |
+| **mock, unittest**   | Python     | Unit testing with mock and unittest                        |
+| **ros2-benchmarks**  | C++/Python | Performance testing in ROS 2                               |
+| **Cucumber, Behave** | Python     | Behavior-driven testing (BDD)                              |
 
 ### Unit Tests
 
@@ -39,9 +40,8 @@ There are library unit tests and ROS2 unit tests. Library unit tests do not test
 
 Integration tests start up multiple nodes to ensure they all work together as needed. This is done again using `unittest` and `gtest`.
 
-## Library Unit Tests
-
-We'll be using the code below to learn about testing in ROS2.
+<Tabs>
+  <TabItem value="Python" label="Python">
 
 ```py
 #!/usr/bin/env python3
@@ -90,6 +90,11 @@ class RobotControl(Node):
         return angular_speed, angle, clockwise
 
     def convert_degree_to_rad(self, speed_deg, angle_deg):
+        angle = float(input('Enter angle (degrees): '))
+        clockwise = input('Rotate clockwise? (y/n): ').strip().lower() == 'y'
+        return angular_speed, angle, clockwise
+
+    def convert_degree_to_rad(self, speed_deg, angle_deg):
         return speed_deg * 3.141592653589793 / 180, angle_deg * 3.141592653589793 / 180
 
     def rotate(self):
@@ -124,12 +129,128 @@ if __name__ == '__main__':
     main()
 ```
 
-In order to set up library unit tests, we have to create a test directory in our package. We can then create a random file. The code to test the above code for core python functionality is below.
+  </TabItem>
+
+  <TabItem value="C++" label="C++">
+
+```cpp
+#include "rclcpp/rclcpp.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include <chrono>
+#include <cmath>
+#include <iostream>
+
+using namespace std::chrono_literals;
+
+class RobotControl : public rclcpp::Node {
+public:
+    RobotControl() : Node("robot_control_node"), ctrl_c_(false) {
+        vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+        rate_ = this->create_wall_timer(100ms, std::bind(&RobotControl::shutdownHook, this));
+    }
+
+    void publishOnceInCmdVel(const geometry_msgs::msg::Twist &cmd) {
+        while (!ctrl_c_) {
+            if (vel_publisher_->get_subscription_count() > 0) {
+                vel_publisher_->publish(cmd);
+                RCLCPP_INFO(this->get_logger(), "Command published");
+                break;
+            } else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
+    }
+
+    void stopRobot() {
+        geometry_msgs::msg::Twist cmd;
+        cmd.linear.x = 0.0;
+        cmd.angular.z = 0.0;
+        publishOnceInCmdVel(cmd);
+    }
+
+    std::tuple<double, double, bool> getInputsRotate() {
+        double angular_speed, angle;
+        std::string clockwise_input;
+        std::cout << "Enter angular speed (degrees/sec): ";
+        std::cin >> angular_speed;
+        std::cout << "Enter angle (degrees): ";
+        std::cin >> angle;
+        std::cout << "Rotate clockwise? (y/n): ";
+        std::cin >> clockwise_input;
+        bool clockwise = (clockwise_input == "y" || clockwise_input == "Y");
+        return std::make_tuple(angular_speed, angle, clockwise);
+    }
+
+    std::pair<double, double> convertDegreeToRad(double speed_deg, double angle_deg) {
+        double speed_rad = speed_deg * M_PI / 180.0;
+        double angle_rad = std::abs(angle_deg) * M_PI / 180.0;
+        return {speed_rad, angle_rad};
+    }
+
+    void rotate() {
+        auto [angular_speed_d, angle_d, clockwise] = getInputsRotate();
+        auto [angular_speed_r, angle_r] = convertDegreeToRad(angular_speed_d, angle_d);
+
+        geometry_msgs::msg::Twist cmd;
+        cmd.angular.z = clockwise ? -angular_speed_r : angular_speed_r;
+
+        auto start_time = this->now();
+        double current_angle = 0.0;
+
+        while (current_angle < angle_r && rclcpp::ok()) {
+            vel_publisher_->publish(cmd);
+            auto elapsed_time = this->now() - start_time;
+            current_angle = angular_speed_r * elapsed_time.seconds();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        stopRobot();
+    }
+
+private:
+    void shutdownHook() {
+        stopRobot();
+        ctrl_c_ = true;
+    }
+
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_publisher_;
+    rclcpp::TimerBase::SharedPtr rate_;
+    bool ctrl_c_;
+};
+
+int main(int argc, char *argv[]) {
+    rclcpp::init(argc, argv);
+    auto robot_control = std::make_shared<RobotControl>();
+    try {
+        robot_control->rotate();
+    } catch (const std::exception &e) {
+        RCLCPP_INFO(robot_control->get_logger(), "Shutting down gracefully.");
+    } catch (...) {
+        RCLCPP_INFO(robot_control->get_logger(), "Shutting down unexpectedly.");
+    }
+    rclcpp::shutdown();
+    return 0;
+}
+```
+
+  </TabItem>
+</Tabs>
+
+## Library Unit Tests
+
+### unittest
+
+We'll be using Pytest first to demostrate how we can test our code.
+
+How can we ensure that the functionality of the node is behaving correctly? In other words, are the core components of the node functioning correctly? For example, are we converting correctly?
+
+Firstly, in order to set up library unit tests, we must first create a test directory within our package and create our tests in there.
 
 ```py
 #!/usr/bin/env python3
 
-import unittest
+import unittest # Testing framework
 import rclpy
 from robot_control_py.robot_control import RobotControl  # Adjust the import based on your ROS 2 package structure
 
@@ -163,7 +284,7 @@ if __name__ == '__main__':
     unittest.main()
 ```
 
-We can run this with just the python interpreter but we can also integrate it to our ROS2 package by configuring our CMakeLists, package.xml, and setup.py file.
+Before we can actually start testing though, we have to set up our ROS2 environment so that it knows we have tests. A cool thing is that you can actually run this using just the python interpreter. If you wanna integrate it within the ROS2 environment, we must first configure the necessary files. If it's a C++ package, that means the CMakeLists and package.xml, while if it's a python package, it's setup.py and package.xml.
 
 #### CMakeList
 
@@ -189,6 +310,7 @@ endif()
 ```bash
 python3 test_robot_control.py # Run without ROS2 environment
 colcon test --packages-select <package_name> # Run with ROS2 environment
+colcon test-result --all --verbose # Run to see results
 ```
 
 The outputs for success and failing:
@@ -211,20 +333,124 @@ Traceback (most recent call last):
   File "/ros2_ws/src/robot_control_py/test/test_robot_control.py", line 30, in test_deg_rad_conversion
     self.assertAlmostEqual(speed, 1.0472, places=4, msg="Speed conversion failed")
 AssertionError: 0.5235987755982988 != 1.0472 within 4 places (0.5236012244017011 difference) : Speed conversion failed
-
-----------------------------------------------------------------------
-Ran 1 test in 0.023s
-
-FAILED (failures=1)
-```
-
-If ran with colcon:
-
-```bash
-colcon test --packages-select robot_control_py
-Starting >>> robot_control_py
 Finished <<< robot_control_py [0.63s]
 Summary: 1 package finished [0.83s]
 root@9f3977f822c1:/ros2_ws# colcon test-result --verbose
 Summary: 1 test, 0 errors, 0 failures, 0 skipped
 ```
+
+#### Test Suites
+
+The unittest provides what's known as a Test Suite which lets us write separate test cases for different bits of functionality. Test suites are composed of test cases or even other test suites.
+
+We can create a test suite by creating a new python file called `test_robot_control_cases.py` and writing these lines of code:
+
+```py
+#!/usr/bin/env python3
+
+import unittest
+import rclpy
+from robot_control_py.robot_control import RobotControl
+
+class TestCaseA(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        rclpy.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        rclpy.shutdown()
+
+    def setUp(self):
+        self.rc = RobotControl()
+
+    def test_case_a(self):
+        speed, angle = self.rc.convert_degree_to_rad(60, 90)
+        self.assertAlmostEqual(angle, 1.57, places=2, msg="Test Case A failed")
+
+class TestCaseB(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        rclpy.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        rclpy.shutdown()
+
+    def setUp(self):
+        self.rc = RobotControl()
+
+    def test_case_b(self):
+        speed, angle = self.rc.convert_degree_to_rad(60, -90)
+        self.assertAlmostEqual(angle, 1.57, places=2, msg="Test Case B failed")
+```
+
+We need a runner for this which runs these tests.
+
+```py
+import unittest
+from test_robot_control_cases import TestCaseA, TestCaseB
+
+if __name__ == '__main__':
+    suite = unittest.TestSuite()
+    suite.addTest(TestCaseA('test_case_a'))
+    suite.addTest(TestCaseB('test_case_b'))
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+```
+
+Running this with `python3 run_tests.py` will run both these test cases. If you want to integrate the runner, simply remove the runner file and make the main function inside of the cases file.
+Output:
+
+```bash
+root@9f3977f822c1:/ros2_ws/src/robot_control_py/test# python3 run_tests.py
+.F
+======================================================================
+FAIL: test_case_b (test_robot_control_cases.TestCaseB)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/ros2_ws/src/robot_control_py/test/test_robot_control_cases.py", line 39, in test_case_b
+    self.assertAlmostEqual(angle, 1.57, places=2, msg="Test Case B failed")
+AssertionError: -1.5707963267948966 != 1.57 within 2 places (3.140796326794897 difference) : Test Case B failed                                                                                             ----------------------------------------------------------------------
+Ran 2 tests in 0.054s
+FAILED (failures=1)
+```
+
+The tests are failing because we only want positive angles but are accounting for negative angles. We can fix it by adjusting our core code and rebuilding, and doing so will pass our tests.
+
+:::info
+If you only want to see tests for one package, run
+`colcon test-result --test-result-base build/<package_name> `
+:::
+
+If you want to color code it, run this command or put it inside a script file:
+
+```bash
+#!/bin/bash
+colcon test --packages-select <package_name> --pytest-args="--color=yes" --pytest-args="-v" --event-handlers console_direct+
+
+root@9f3977f822c1:/ros2_ws# ./tests.sh
+Starting >>> robot_control_py
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0 -- /usr/bin/python3
+cachedir: /ros2_ws/build/robot_control_py/.pytest_cache
+rootdir: /ros2_ws/src/robot_control_py, configfile: pytest.ini
+plugins: ament-flake8-0.12.11, ament-pep257-0.12.11, ament-xmllint-0.12.11, ament-copyright-0.12.11, ament-lint-0.12.11, launch-testing-ros-0.19.8, launch-testing-1.0.7, colcon-core-0.18.4
+collecting ...
+collected 3 items
+test/test_robot_control_cases.py::TestCaseA::test_case_a PASSED          [ 33%]
+test/test_robot_control_cases.py::TestCaseB::test_case_b PASSED          [ 66%]
+test/test_robot_control_cases.py::TestCaseB::test_case_string PASSED     [100%]
+-------- generated xml file: /ros2_ws/build/robot_control_py/pytest.xml --------
+============================== 3 passed in 0.12s ===============================
+Finished <<< robot_control_py [0.63s]                                                                                                                                                                       Summary: 1 package finished [0.83s]
+```
+
+### GTests
+
+ROS2 documentation for integrating GTests is minimal, will come back to it.
+
+## Node Tests
+
+## Integration Tests

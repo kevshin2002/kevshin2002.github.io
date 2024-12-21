@@ -14,7 +14,7 @@
     "start": "docusaurus start --host 0.0.0.0 --port 3006",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
+    "deploy": "GIT_USER=kevshin2002 USE_SSH=True docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
