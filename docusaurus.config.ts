@@ -189,10 +189,6 @@ const config: Config = {
               label: "Projects",
               to: "/projects",
             },
-            {
-              label: "Talks",
-              to: "/talks",
-            },
           ],
         },
         {},
