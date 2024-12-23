@@ -94,7 +94,7 @@ const config: Config = {
         theme: {
           customCss: [
             require.resolve("./src/css/custom.scss"),
-            //require.resolve("./src/css/doc-overview-page.scss"),
+            require.resolve("./src/css/doc-overview-page.scss"),
             require.resolve("./src/css/tagsearch.css"),
           ],
         },
@@ -149,10 +149,10 @@ const config: Config = {
         srcDark: "img/logo.png",
       },
       items: [
+        { to: "/courses", label: "Courses", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
-        { to: "/docs/note", label: "Note", position: "left" },
+        { to: "/docs/note", label: "Notes", position: "left" },
         { to: "/projects", label: "Projects", position: "left" },
-        { to: "/talks", label: "Talks", position: "left" },
       ],
     },
     footer: {
