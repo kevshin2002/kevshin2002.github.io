@@ -4,11 +4,28 @@
         <title>Kevin Shin, Electrical Engineer Blog</title>
         <link>https://kevshin2002.github.io/blog</link>
         <description>Kevin Shin, Electrical Engineer Blog</description>
-        <lastBuildDate>Sat, 07 Dec 2024 18:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Sat, 21 Dec 2024 18:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <language>en</language>
         <copyright>Copyright © 2024 Kevin Shin. All rights reserved.</copyright>
+        <item>
+            <title><![CDATA[My Introduction To Linux]]></title>
+            <link>https://kevshin2002.github.io/blog/introduction-to-linux</link>
+            <guid>https://kevshin2002.github.io/blog/introduction-to-linux</guid>
+            <pubDate>Sat, 21 Dec 2024 18:00:00 GMT</pubDate>
+            <description><![CDATA[It's been two weeks since I last wrote. I could have modified my blog dates and make it seem like I was on top of my blogging journal but why would I. That defeats the whole point of blogging. Blogging is supposed to showcase to whoever is visiting my site to see the raw and unfiltered person of who I am.]]></description>
+            <content:encoded><![CDATA[<p>It's been two weeks since I last wrote. I could have modified my blog dates and make it seem like I was on top of my blogging journal but why would I. That defeats the whole point of blogging. Blogging is supposed to showcase to whoever is visiting my site to see the raw and unfiltered person of who I am.</p>
+<p>It's been a busy two weeks, juggling classes, finals, projects, looking for new grad opportunities, and learning some new stuff on the side. The new stuff is what this blog post is about, specifically, my introduction to linux.</p>
+<p>Everybody hears linux and immediately thinks that person must be hardcore programmer or a hacker. I've come to find out that it's mainly two types of people: people who want to understand their computer and people who want to brag that they use linux.</p>
+<p>I like to think that I fit the latter as one of my life long interests is to be a lifelong learner. This means understanding what I'm working with, even though I may not necessarily require it.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="why-you-may-ask">Why you may ask?<a href="https://kevshin2002.github.io/blog/introduction-to-linux#why-you-may-ask" class="hash-link" aria-label="Direct link to Why you may ask?" title="Direct link to Why you may ask?">​</a></h3>
+<p>Many may say that you don't need to understand how your car works if your whole purpose is to get from point A to point B, and I agree with that. My reasoning is that I don't want to be just a driver, but an engineer.</p>
+<p>What if my car broke down in the middle of the road? Having a basic understanding of how a car functions can save you time and money instead of relying on someone else. It is also my core belief that knowing diverse sectors of technology can help make better informed decisions. We take inspiration from mother nature, so why can't we take inspiration from different fields?</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="arch-linux">Arch Linux<a href="https://kevshin2002.github.io/blog/introduction-to-linux#arch-linux" class="hash-link" aria-label="Direct link to Arch Linux" title="Direct link to Arch Linux">​</a></h3>
+<p>You might be wondering what linux distro I selected, and it's probably not a surprise that it's Arch Linux. The only reason why I chose this was because of how popular it was, meaning that there would be some sort of community support for it. It turned out to be right because Arch Wiki is one of the main leading reasons why Arch is used. It's also because you have more freedom in Arch than more common distros such as Ubuntu.</p>
+<p>There are various trade offs such as having to configure packages individually, setting up your environment, getting hardware drivers that matches, and many more. This means that if ANYTHING went wrong, it was basically your fault. This is kind of an extreme way to learn linux (surface level) but it was fine since I had a windows OS on my SSD. I could just dual boot into my windows if my arch linux messed up and redo the entire setup again.</p>]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Purpose of Website]]></title>
             <link>https://kevshin2002.github.io/blog/thoughts</link>
@@ -39,7 +56,8 @@ It's actually at this stage that feedback is the most significant. Early feedbac
 <p>This is what most people often do as they'll do something advanced and not understand anything. It's oftentimes best to start from the foundations and start beginning.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="relation-to-website">Relation To Website<a href="https://kevshin2002.github.io/blog/thoughts#relation-to-website" class="hash-link" aria-label="Direct link to Relation To Website" title="Direct link to Relation To Website">​</a></h3>
 <p>Now that I've summarized the video for you, let's talk about how it relates to my personal website. I'm quite young, and at the time of writing this, I'll be turning 23 in April. I know for sure that the decades ahead of me will be full of learning, challenges, and opportunities.</p>
-<p>I want to document this journey on my website as well as showcase all of the cool things I've done. In fact, it's actually a challenge to keep a tab on one of my interest each day and write about it. If you see this a few years, heck even a few decades, I hope that my journey has matched what I've ambitioned.</p>]]></content:encoded>
+<p>I want to document this journey on my website as well as showcase all of the cool things I've done. In fact, it's actually a challenge to keep a tab on one of my interest each day and write about it. If you see this a few years, heck even a few decades, I hope that my journey has matched what I've ambitioned.</p>
+<p>My blog is also unfiltered and showcases the raw humane me. This means that I won't be censoring, modifying, prettying up any of my thoughts (asides from grammar). The reason is that so much of social media has "processed content", and I want to step away from that and give you genuine blogs like as if you were talking to me.</p>]]></content:encoded>
             <category>growth</category>
             <category>mindset</category>
         </item>
