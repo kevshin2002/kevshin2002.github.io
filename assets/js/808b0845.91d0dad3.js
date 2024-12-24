@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkkevshin2002=self.webpackChunkkevshin2002||[]).push([[2436],{1348:e=>{e.exports=JSON.parse('{"tag":{"label":"embedded","permalink":"/docs/tags/embedded","allTagsPath":"/docs/tags","count":1,"items":[{"id":"Robotics/RTOS/zephyr","title":"Zephyr","description":"","permalink":"/docs/Robotics/RTOS/zephyr"}],"unlisted":false}}')}}]);
