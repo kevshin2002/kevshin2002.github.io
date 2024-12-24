@@ -11,6 +11,12 @@ last_update:
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
+:::danger
+This has not been proof-read or modified for simpler reading yet.
+
+12/23/24
+:::
+
 ## Getting Started
 
 These are my notes from the Testing with ROS course available on [The Construct](https://app.theconstruct.ai). The course is on ROS, but I referenced the ROS2 documentation in parallel to see the differences in testing framework and used ChatGPT to fill in the gaps. Since the simulator is on Ubuntu 16.04, I used the docker image `osrf/ros:humble-desktop` to simulate my own ROS2 environment.
@@ -71,7 +77,7 @@ class RobotControl(Node):
                 self.vel_publisher.publish(self.cmd)
                 self.get_logger().info("Command published")
                 break
-            else:
+	     else:
                 self.rate.sleep()
 
     def shutdownhook(self):
@@ -147,7 +153,7 @@ class RobotControl : public rclcpp::Node {
 public:
     RobotControl() : Node("robot_control_node"), ctrl_c_(false) {
         vel_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
-        rate_ = this->create_wall_timer(100ms, std::bind(&RobotControl::shutdownHook, this));
+        rate_ = this->create_wall_timer(100ms, std::bind(&Ro botControl::shutdownHook, this));
     }
 
     void publishOnceInCmdVel(const geometry_msgs::msg::Twist &cmd) {
@@ -452,5 +458,137 @@ Finished <<< robot_control_py [0.63s]                                           
 ROS2 documentation for integrating GTests is minimal, will come back to it.
 
 ## Node Tests
+
+Node tests are basically to check whether the functionality of ROS2 is correct. This means checking the API such as topics, services, and etc. This is done with `launch_testing` alongside `unittest/gtest` We want to have node tests because we want to ensure a publisher is correctly publishing the expected values on the expected topic. We also want to verify that a ROS2 service provides the correct response. For low stake projects, tests may not be important, but what if your project is a high-stake project involving costly parts? Simulations may help, but tests can also help.
+
+We'll showcase how we can test a node by extending our RobotControl from the unit test. Specifically, we'll be checking to see if our `RobotControl` is publishing to `/cmd_vel`.
+
+<Tabs>
+	<TabItem value="Python" label="Python">
+```py
+#!/usr/bin/env python3                                                                                                                                                                                          
+                                                                                                                                                                                                                
+from robot_control_py.robot_control import RobotControl                                                                                                                                                         
+import rclpy                                                                                                                                                                                                    
+from rclpy.node import Node                                                                                                                                                                                     
+import unittest                                                                                                                                                                                                 
+from geometry_msgs.msg import Twist                                                                                                                                                                             
+import time                                                                                                                                                                                                     
+                                                                                                                                                                                                                
+class TestRobotControl(unittest.TestCase):                                                                                                                                                                      
+                                                                                                                                                                                                                
+    @classmethod                                                                                                                                                                                                
+    def setUpClass(cls):                                                                                                                                                                                        
+        rclpy.init()                                                                                                                                                                                            
+                                                                                                                                                                                                                
+    @classmethod                                                                                                                                                                                                
+    def tearDownClass(cls):                                                                                                                                                                                     
+        rclpy.shutdown()                                                                                                                                                                                        
+                                                                                                                                                                                                                
+    def setUp(self):                                                                                                                                                                                            
+        self.node = rclpy.create_node('test_robot_control_node')                                                                                                                                                     
+        self.rc = RobotControl()                                                                                                                                                                                
+        self.success = False                                                                                                                                                                                    
+                                                                                                                                                                                                                
+    def callback(self, msg):                                                                                                                                                                                    
+        print(f"Received Angular Speed: {msg.angular.z}")                                                                                                                                                       
+        self.success = msg.angular.z == 1.0                                                                                                                                                                     
+                                                                                                                                                                                                                
+    def test_publish_cmd_vel(self):                                                                                                                                                                             
+        test_sub = self.node.create_subscription(Twist, "/cmd_vel", self.callback, 10)                                                                                                                          
+        self.rc.cmd.angular.z = 1.0                                                                                                                                                                             
+        self.rc.publish_once_in_cmd_vel()                                                                                                                                                                       
+        timeout_t = time.time() + 10.0  # 10 seconds                                                                                                                                                            
+        rclpy.spin_once(self.node, timeout_sec=0.1)                                                                                                                                                             
+        while not self.success and time.time() < timeout_t:                                                                                                                                                     
+            rclpy.spin_once(self.node, timeout_sec=0.1)                                                                                                                                                         
+        self.assertTrue(self.success)                                                                                                                                                                           
+                                                                                                                                                                                                                
+    def tearDown(self):                                                                                                                                                                                         
+        self.node.destroy_node()                                                                                                                                                                                
+                                                                                                                                                                                                                
+if __name__ == '__main__':                                                                                                                                                                                      
+    unittest.main()                       
+```
+
+    </TabItem>
+    <TabItem value="C++" label="C++">
+    </TabItem>
+
+</Tabs>
+
+There isn't much difference except now you're creating a node for whatever purpose and seeing if the ROS2 library is functioning. In our case, we're subscribing to /cmd_vel, and seeing if we do get a message back.
+
+Using our built in bash script, we can see that the tests indeed do work. You can also just run it with the python interpreter.
+
+```bash
+python3 test_robot_control_node.py
+[INFO] [1735008562.793690945] [robot_control_node]: Command published
+Received Angular Speed: 1.0
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.036s
+
+OK
+
+======================================================================
+./tests.sh robot_control_py
+./tests.sh robot_control_py
+Starting >>> robot_control_py
+============================= test session starts ==============================
+platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0 -- /usr/bin/python3
+cachedir: /ros2_ws/build/robot_control_py/.pytest_cache
+rootdir: /ros2_ws/src/robot_control_py, configfile: pytest.ini
+plugins: ament-flake8-0.12.11, ament-pep257-0.12.11, ament-xmllint-0.12.11, ament-copyright-0.12.11, ament-lint-0.12.11, launch-testing-ros-0.19.8, launch-testing-1.0.7, colcon-core-0.18.4
+collecting ...
+collected 4 items
+
+test/test_robot_control_cases.py::TestCaseA::test_case_a PASSED          [ 25%]
+test/test_robot_control_cases.py::TestCaseB::test_case_b PASSED          [ 50%]
+test/test_robot_control_cases.py::TestCaseB::test_case_string PASSED     [ 75%]
+test/test_robot_control_node.py::TestRobotControl::test_publish_cmd_vel PASSED [100%]
+
+-------- generated xml file: /ros2_ws/build/robot_control_py/pytest.xml --------
+============================== 4 passed in 0.15s ===============================
+Finished <<< robot_control_py [0.67s]
+
+Summary: 1 package finished [0.89s]
+```
+
+### Automation
+
+There's actually a way simpler way where we just modify the CMakeLists and package.xml, and remove all the unnecessary stuff from main. From the ROS2 documentation,
+
+```txt
+cmake_minimum_required(VERSION 3.8)
+project(app)
+
+########
+# test #
+########
+
+if(BUILD_TESTING)
+  # Integration tests
+  find_package(ament_cmake_ros REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
+  function(add_ros_isolated_launch_test path)
+    set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
+    add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
+  endfunction()
+  add_ros_isolated_launch_test(test/<any_test>.py) # For each test, you add another line
+endif()
+```
+
+```xml
+<test_depend>ament_cmake_ros</test_depend>
+<test_depend>launch</test_depend>
+<test_depend>launch_ros</test_depend>
+<test_depend>launch_testing</test_depend>
+<test_depend>launch_testing_ament_cmake</test_depend>
+<test_depend>rclpy</test_depend>
+<test_depend>turtlesim</test_depend>
+```
+
+And you can just run `colcon test` to get your tests. I came upon this after attempting to figure out how to create launch files for testing but seems to be a bit complex for my level. Will come back to it.
 
 ## Integration Tests
