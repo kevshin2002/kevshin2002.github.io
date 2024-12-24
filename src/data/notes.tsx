@@ -65,14 +65,14 @@ const Notes: Note[] = [
     description: "Understand how ROS2 works in C++, Python, and Rust",
     preview: require("./images/ros2.png"),
     website: "./Robotics/ROS2",
-    tags: ["cpp", "python", "rust", "robotics"],
+    tags: ["cpp", "python", "rust", "robotics", "pinned"],
   },
   {
     title: "ROS2 Nav2",
     description: "Understand how the ROS2 navigation framework (Nav2) works",
     preview: require("./images/nav2.png"),
     website: "./Robotics/ROS2/nav2",
-    tags: ["cpp", "python", "robotics"],
+    tags: ["cpp", "python", "robotics", "pinned"],
   },
   {
     title: "Effective Modern C++",
@@ -87,7 +87,7 @@ const Notes: Note[] = [
       "Learn how to test ROS2 with unit and integration testing via pytest/gtest",
     preview: require("./images/ros2_test.jpg"),
     website: "./Robotics/ROS2/testing-ros2",
-    tags: ["cpp", "python", "robotics"],
+    tags: ["cpp", "python", "robotics", "pinned"],
   },
   {
     title: "URDF",
@@ -109,7 +109,7 @@ const Notes: Note[] = [
     description: "Understand how to use ROS2 and computer vision for robotics",
     preview: require("./images/perception.png"),
     website: "./Robotics/ROS2/perception",
-    tags: ["cpp", "robotics", "machine_learning"],
+    tags: ["cpp", "robotics", "machine_learning", "pinned"],
   },
 ];
 

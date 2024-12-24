@@ -28,3 +28,6 @@ python:
 rust:
   label: "Rust"
   description: "Rust"
+embedded:
+  label: "Embedded"
+  description: "Embedded"
