@@ -8,8 +8,7 @@ require("dotenv").config();
 
 const config: Config = {
   title: "Kevin Shin, Electrical Engineer",
-  tagline:
-    "Researcher interested in personal growth and tech trends. Tracking authentic behavior, mapping minds, bridging Lab findings to real-world impact.",
+  tagline: "Lifelong learner passionate for continuous learning and autonomy.",
   url: "https://kevshin2002.github.io",
   baseUrl: "/",
   staticDirectories: ["static", "public"],

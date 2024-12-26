@@ -5,6 +5,8 @@ authors: kevshin2002
 date: 2024-12-21T18:00
 ---
 
+import Workflow from "@site/blog/assets/workflow.mp4";
+
 It's been two weeks since I last wrote. I could have modified my blog dates and make it seem like I was on top of my blogging journal but why would I. That defeats the whole point of blogging. Blogging is supposed to showcase to whoever is visiting my site to see the raw and unfiltered person of who I am.
 
 It's been a busy two weeks, juggling classes, finals, projects, looking for new grad opportunities, and learning some new stuff on the side. The new stuff is what this blog post is about, specifically, my introduction to linux.
@@ -26,3 +28,24 @@ What if my car broke down in the middle of the road? Having a basic understandin
 You might be wondering what linux distro I selected, and it's probably not a surprise that it's Arch Linux. The only reason why I chose this was because of how popular it was, meaning that there would be some sort of community support for it. It turned out to be right because Arch Wiki is one of the main leading reasons why Arch is used. It's also because you have more freedom in Arch than more common distros such as Ubuntu.
 
 There are various trade offs such as having to configure packages individually, setting up your environment, getting hardware drivers that matches, and many more. This means that if ANYTHING went wrong, it was basically your fault. This is kind of an extreme way to learn linux (surface level) but it was fine since I had a windows OS on my SSD. I could just dual boot into my windows if my arch linux messed up and redo the entire setup again.
+
+I'm not going to claim that I did everything on my own, and frankly speaking, I did ask LLMs for help. I wasn't going to spend my time reading documentation which in hindsight, I should have since most of the answers were on there. This isn't a tutorial on how to set up arch linux, so I won't be going into it. The biggest challenge though was perhaps figuring out how to configure my NVIDIA graphics card to work with the distro but I got that figured out using `nvidia-drm`.
+
+### Workspace
+
+My next biggest challenge was to figure out what DE to use and how I wanted my workspace set up. I know I said I installed arch linux for the freedom, but I'm a big fan of not reinventing the wheel. I opted to just take someones dotfiles online and that's precisely what I did. I initially had KDE and Plasma set up, but after stumbling upon Hyprland, I was mesmerized by the aesthetics. I took the dotfiles provided by [ML4W](https://github.com/mylinuxforwork/dotfiles) and configured some of them to fit my workflow.
+
+I did a bunch of configurations and honestly enjoy how my workflow is set up. For my software workflow , I configured lazygit/lazydocker for easier use of git/docker in CLI. For anything IDE/terminal related, I configured neovim with `nvim-dap`.
+
+To be truthful, at the time I am writing this, I am doing a water fast until the academic quarter starts, and do not have the energy to be writing this. So I will stop and just showcase my workflow below. Images and GIFs portray a thousand words.
+
+  <iframe
+  width="90%"
+  height="360px"
+  src={Workflow}
+
+allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+allowfullscreen
+title="Workflow Video"
+
+> </iframe>
