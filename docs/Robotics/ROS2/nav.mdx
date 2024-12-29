@@ -10,6 +10,7 @@ last_update:
 
 import Map from "@site/static/img/map.jpg";
 import Mapped from "@site/static/img/Mapped.jpg";
+import Localization from "@site/blog/assets/localization.mp4";
 
 :::danger
 This has not been proof-read or modified for simpler reading yet.
@@ -254,6 +255,10 @@ def generate_launch_description():
 
 We can try using our saved map by creating a ROS2 package called map_server, placing our saved map files inside of config, and creating our launch file. Note that we can just put our launch file in any package and just create a new launch file with our configs.
 
+:::info
+You must specify your map display durability as Transient Local. Volatile means use incoming data being published as the map source, while transient local allows us to check if we had any cached messages that were published but not received by our subscriber as well as all incoming data.
+:::
+
 ## Nav2 Lifecycle Manager
 
 Navigation nodes are managed nodes meaning that they can be easily controlled to be restarted, paused, or running. They can do so by being at these states:
@@ -277,7 +282,7 @@ These nodes have the required overrides of the lifecycle functions:
 - on_shutdown()
 - on_error()
 
-### Lifecycle Manager
+#### Lifecycle Manager
 
 In Nav2, the external agent that helps transition nodes to an active state is called the `nav2_lifecycle_manager`. The lifecycle manager changes the state of the managed nodes to achieve a controlled startup, shutdown, reset, pause, or resume of the navigation stack.
 
@@ -316,3 +321,210 @@ uint8 command
 ---
 bool success
 ```
+
+## Localization
+
+Localization is knowing the current position with respect to the environment. This means knowing the position and orientation. This is otherwise known as the pose.
+
+ROS has a very robust algorithm for localization. It uses `AMCL` which is the Adaptive Monte-Carlo Licalization and uses a probabilistic localization system for a robot moving in 2D. It implements the adaptive or KLD sampling Monte Carlo localization approach which uses a particle filter to track a robot's pose against a known map.
+
+**A ROS Robot is localized when somebody publishes a transform between the `/map` frame and the `/odom` frame**
+
+That means that the `/odom` frame of the robot knows its relative position to the `/map` frame. Therefore, the robot knows its position on the map since `/base_link` frame is directly connected to the `/odom` frame.
+
+When everything is correct, the AMCL publishes that transform.
+
+### ROS2 Localization
+
+In order to localize, we need three nodes:
+
+- `map_server`: provides the map to the localization algorithm
+- `localization`: the algorithm
+- `life cycle manager`: state manager
+
+Let's create an `ament_cmake` package and the launch file for all three nodes.
+
+```py
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+import os
+
+def generate_launch_description():
+    nav2_yaml = os.path.join(get_package_share_directory('localization'), 'config', 'amcl_config.yaml')
+    map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area.yaml')
+    print(map_file)
+    return LaunchDescription([
+        Node(
+            package="nav2_map_server",
+            executable="map_server",
+            name="map_server",
+            output="screen",
+            parameters=[{'use_sim_time': True}, {'yaml_filename': map_file}] ## This is the saved map we got from our cartography.
+            ),
+        Node(
+            package="nav2_amcl",
+            executable="amcl",
+            name="amcl",
+            output="screen",
+            parameters=[nav2_yaml]
+            ),
+        Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager",
+            output="screen",
+            parameters=[{'use_sim_time': True},
+                        {'autostart': True},
+                        {'node_names': ['map_server', 'amcl']}]
+            )
+        ])
+```
+
+The amcl_config specifies the configurations for the localization algorithm. This goes inside of the config directory of your package.
+
+```yaml
+amcl:
+  ros__parameters:
+    use_sim_time: True
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "base_footprint"
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: "map"
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 100.0
+    laser_min_range: -1.0
+    laser_model_type: "likelihood_field"
+    max_beams: 60
+    max_particles: 8000
+    min_particles: 200
+    odom_frame_id: "odom"
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.25
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+```
+
+Make sure to add launch and config files respective to whatever build package you are using.
+
+#### For Python
+
+```py
+(os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+(os.path.join('share', package_name, 'config'), glob('config/*')),
+```
+
+#### For C++
+
+```text
+install(DIRECTORY
+        launch
+        config
+        DESTINATION $share/{PROJECT_NAME}
+)
+```
+
+If all is placed correctly, we should be able to receive our old map. From there onwards, you want to configure your RVIZ settings with these below:
+
+- `map`: Environment
+- `TF`: Frames of the robot
+- `Robot Model`: Robot structure (uses URDF model)
+- `Laser Scan`: Estimate of robot position relative to actual map
+- `Pose with Covariance`: Status of the localization
+- `Particle Cloud`: See the localization particle distribution
+
+:::note
+Particle cloud uses the reliability policy of best effort and not volatile. If you want to use these configs again, you can save them.
+:::
+
+We can use the `2D Pose Estimate` to tell our `AMCL` system to start localizing the robot. You want to put it at a rough estimate of where the robot is so the algorithm can estimate roughly from the initial state. This'll start publishing the transform between `map` and `odom` topics respectively. When we say transform, it means relationship. The map and odom data are independent from oen another, but there is a mathematical relationship between them using AMCL, and can be used to "localize" our robot's position from these data. That's because we have laser scan (environment scanning) and odometry (wheel/position).
+
+If we start moving our robot, our estimation and localization starts to fit better.
+
+<iframe
+  width="100%"
+  height="650px"
+  src={Localization}
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+  title="Localization Video"
+>
+  {" "}
+</iframe>
+
+:::info
+For 2D Localization, we only need $(x,y, \theta)$ and are the variables used for setting the robot in the `map` frame. We can compute $(x,y,\theta)$ by using the AMCL.
+The Adaptive Monte Carlo Localization algorithm uses particles to localize the robot. Each particle have their own coordinates, orientation value, and a weight. These weights are the likelihood of the particle being a good estimate of the robot's actual pose based on our sensor data. That means that if our weight is higher for a given particle, that particle is more likely to represent the robot's true pose. These particles are then re-sampled whenever the robot moves and with new sensor data, the higher likelihood particles remain and will converge over many iterations to the robot's true pose.
+:::
+
+To get a good localization of our robot, we need to configure out AMCL node from our amcl_config.yaml. Below are the parameters and their respective categories.
+
+#### Overall Filter Parameters
+
+| Parameter                   | Type   | Default         | Description                                                                                                            |
+| --------------------------- | ------ | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `min_particles`             | int    | 500             | Minimum allowed number of particles.                                                                                   |
+| `max_particles`             | int    | 2000            | Maximum allowed number of particles.                                                                                   |
+| `update_min_d`              | double | 0.25 meters     | Translational movement required before performing a filter update.                                                     |
+| `update_min_a`              | double | 0.2 radians     | Rotational movement required before performing a filter update.                                                        |
+| `resample_interval`         | int    | 1               | Number of filter updates required before re-sampling.                                                                  |
+| `transform_tolerance`       | double | 1.0 seconds     | Time to post-date the published transform, indicating validity into the future.                                        |
+| `recovery_alpha_slow`       | double | 0.0 (disabled)  | Exponential decay rate for the slow average weight filter; helps decide recovery with random poses. Suggested: 0.001.  |
+| `recovery_alpha_fast`       | double | 0.0 (disabled)  | Exponential decay rate for the fast average weight filter; helps decide recovery with random poses. Suggested: 0.1.    |
+| `set_initial_pose`          | bool   | false           | Causes AMCL to set the initial pose from `initial_pose*` parameters instead of waiting for the `initial_pose` message. |
+| `initial_pose`              | Pose2D | {0.0, 0.0, 0.0} | X, Y, Z, and yaw coordinates of the robot base frame's initial pose in the global frame.                               |
+| `always_reset_initial_pose` | bool   | false           | Requires an initial pose on reset. Uses the last known pose if false.                                                  |
+| `save_pose_rate`            | double | 0.5 Hz          | Maximum rate at which to save the last estimated pose and covariance to the parameter server. Use -1.0 to disable.     |
+
+#### Laser Model Parameters
+
+| Parameter                   | Type   | Default            | Description                                                                                    |
+| --------------------------- | ------ | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `laser_min_range`           | double | -1.0               | Minimum scan range to be considered. Use laser's minimum range if set to -1.0.                 |
+| `laser_max_range`           | double | 100                | Maximum scan range to be considered. Use laser's maximum range if set to -1.0.                 |
+| `max_beams`                 | int    | 60                 | Number of evenly-spaced beams in each scan used when updating the filter.                      |
+| `z_hit`                     | double | 0.5                | Mixture weight for `z_hit` part of the model.                                                  |
+| `z_short`                   | double | 0.05               | Mixture weight for the `z_short` part of the model.                                            |
+| `z_max`                     | double | 0.05               | Mixture weight for the `z_max` part of the model.                                              |
+| `z_rand`                    | double | 0.5                | Mixture weight for the `z_rand` part of the model.                                             |
+| `sigma_hit`                 | double | 0.2 meters         | Standard deviation for Gaussian model used in `z_hit` part.                                    |
+| `lambda_short`              | double | 0.1                | Exponential decay parameter for the `z_short` part of the model.                               |
+| `laser_likelihood_max_dist` | double | 2.0 meters         | Maximum distance for obstacle inflation in the likelihood_field model.                         |
+| `laser_model_type`          | string | "likelihood_field" | Model to use: `beam`, `likelihood_field`, or `likelihood_field_prob` (includes beam skipping). |
+
+Mixture weights should sum to 1.
+
+#### Odometry Model Parameters
+
+| Parameter          | Type   | Default          | Description                                                                                    |
+| ------------------ | ------ | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `robot_model_type` | string | "differential"   | Type of motion model: `differential` or `omnidirectional`.                                     |
+| `alpha1`           | double | 0.2              | Noise in odometry's rotation estimate from rotational motion.                                  |
+| `alpha2`           | double | 0.2              | Noise in odometry's rotation estimate from translational motion.                               |
+| `alpha3`           | double | 0.2              | Noise in odometry's translation estimate from translational motion.                            |
+| `alpha4`           | double | 0.2              | Noise in odometry's translation estimate from rotational motion.                               |
+| `alpha5`           | double | 0.2              | Translation-related noise parameter (only for `omni` model).                                   |
+| `odom_frame_id`    | string | "odom"           | Frame to use for odometry.                                                                     |
+| `base_frame_id`    | string | "base_footprint" | Frame to use for the robot base.                                                               |
+| `global_frame_id`  | string | "map"            | Name of the coordinate frame published by the localization system.                             |
+| `tf_broadcast`     | bool   | true             | Set to false to prevent AMCL from publishing the transform between global and odometry frames. |
