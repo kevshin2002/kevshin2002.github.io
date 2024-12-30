@@ -11,6 +11,9 @@ last_update:
 import Map from "@site/static/img/map.jpg";
 import Mapped from "@site/static/img/Mapped.jpg";
 import Localization from "@site/blog/assets/localization.mp4";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Demo from "@site/docs/Robotics/ROS2/assets/demo.mp4";
 
 :::danger
 This has not been proof-read or modified for simpler reading yet.
@@ -20,7 +23,7 @@ This has not been proof-read or modified for simpler reading yet.
 
 ## Getting Started
 
-These are my notes from the ROS2 Navigation course available on [The Construct](https://app.theconstruct.ai). As this is a robotics note, you will need physical hardware components to follow along.Before each section though, I will list what is required before starting.
+These are my notes from the ROS2 Navigation course available on [The Construct](https://app.theconstruct.ai). As this is a robotics note, you will need physical hardware components to follow along. Before each section though, I will list what is required before starting.
 
 ## Map
 
@@ -371,7 +374,7 @@ def generate_launch_description():
             ),
         Node(
             package="nav2_lifecycle_manager",
-            executable="lifecycle_manager",
+Launch Fil            executable="lifecycle_manager",
             name="lifecycle_manager",
             output="screen",
             parameters=[{'use_sim_time': True},
@@ -465,7 +468,7 @@ If we start moving our robot, our estimation and localization starts to fit bett
   width="100%"
   height="650px"
   src={Localization}
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
   allowfullscreen
   title="Localization Video"
 >
@@ -528,3 +531,733 @@ Mixture weights should sum to 1.
 | `base_frame_id`    | string | "base_footprint" | Frame to use for the robot base.                                                               |
 | `global_frame_id`  | string | "map"            | Name of the coordinate frame published by the localization system.                             |
 | `tf_broadcast`     | bool   | true             | Set to false to prevent AMCL from publishing the transform between global and odometry frames. |
+
+### Auto Localization
+
+#### Via YAML
+
+If you don't want to localize via GUI `rviz`, you can do so by modifying the configuration settings for `amcl`. When you start your localization server, you're given the initial_pose, to which you can set those within the `amcl_config`:
+
+```yaml
+set_initial_pose: true
+initial_pose:
+  x: -4.44264
+  y: 2.32243
+  yaw: 0.328028
+```
+
+Rebuild the package, and you can start the server and not have to localize the robot.
+
+#### Via CLI
+
+```bash
+ros2 topic pub -1 /initialpose geometry_msgs/msg/PoseWithCovarianceStamped "{header: {stamp: {sec: 0}, frame_id: 'map'}, pose: {pose: {position: {x: 0.2, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}}"
+```
+
+### Global Localization
+
+Global localization is when neither the person or robot knows where it is on the map. In order to localize itself, it does global localization:
+
+1. Distribute all the particles of the filter across the map. (Calls the service `/reinitialize_global_localization`
+2. Move the robot around until it detects where the it is located. If the environment is simple, can just rotate itself.
+
+Modify the amcl_config to increase particles:
+
+```yaml
+max_particles: 80000
+min_particles: 2000
+```
+
+Call the service and start moving around to localize.
+
+```bash
+ros2 service call /reinitialize_global_localization std_srvs/srv/Empty
+```
+
+## Path Planning
+
+Path planning is planning a route from Point A to Point B, avoiding obstacles along the way.
+
+In ROS2, to do path planning, we have to launch several nodes. Before we start any path planning, we need to have two nodes which provides the base map and localization:
+
+##### Mapping Environment
+
+1. `nav2_map_server`: provides the base map as a topic and service
+2. `nav2_amcl`: responsible for localization via Adaptive Monte Carlo Localizer
+
+To do path planning, we need these nodes:
+
+##### Path Planning
+
+1. `planner`
+2. `controller`
+3. `manager_of_recovery_behaviors`
+4. `behavior_tree_navigator`
+5. `nav2_lifecycle_manager`
+
+### Planner
+
+The planner is responsible for computing a path from Point A to Point B. It can compute a path as soon as the robot receives a `2D_Goal_Pose` and also has access to a global environment representation and sensor data buffered into it (`Global Costmap`).
+
+Currently on Galactic, there is only one Planenr algorithm available in ROS2, the `Nav2Fn_Planner`.
+
+In order to launch the planner, we need these in the launch file:
+
+````py
+package='nav2_planner', these in the ```config``` directory.
+<Tabs>
+executable='planner_server',
+name='planner_server',
+output='screen',
+parameters=[nav2_yaml] # contains all of the configuration parameters
+````
+
+##### nav2_yaml
+
+```yaml
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 10.0
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+```
+
+### Controller
+
+The controller is responsible for performing reactive path planning from the current position to the maximum range of the sensors. From this data, it builds a trajectory to avoid the obstacles it encounters along the way while trying to follow the path generated by the planner. The controller is the one responsible for generating the wheel's commands.
+
+There are only two planners available in ROS2:
+
+- `dwb_controller`: used with `differential drive` robots
+- `TEB controller`: used with `car-like` robots (doesn't work properly in Galactic)
+
+In order to launch the controller, we need these in the launch file:
+
+```py
+package='nav2_controller',
+executable='controller_server',
+name='controller_server',
+output='screen',
+parameters=[controller_yaml] # contains all of the configuration parameters
+```
+
+##### controller_yaml
+
+````yaml
+controller_server:
+  ros__parameters:
+    use_sim_time: True
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+
+    # Progress checker parameters
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
+    # Goal checker parameters
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+    # DWB parameters
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.26
+      max_vel_y: 0.0
+      max_vel_theta: 1.0
+      min_speed_xy: 0.0
+      max_speed_xy: 0.26
+      min_speed_theta: 0.0
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+    - ```dwb_controller```: Used in ```differential drive``` robots   acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      vx_samples: 20
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: True
+      stateful: True
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+````
+
+### Navigation Controller
+
+The navigation controller coordinates between the planner node and the controller node. This node is called the `bt_navigator`. It basically manages these two nodes.
+
+Navigation controller launch file:
+
+```py
+package='nav2_bt_navigator',
+executable='bt_navigator',
+name='bt_navigator',
+output='screen',
+parameters=[bt_navigator_yaml]
+```
+
+##### bt_navigator_yaml
+
+```yaml
+bt_navigator:
+  ros__parameters:
+    use_sim_time: True
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    default_nav_to_pose_bt_xml: "/home/user/ros2_ws/src/path_planner_server/config/behavior.xml"
+    plugin_lib_names:
+      - nav2_compute_path_to_pose_action_bt_node
+      - nav2_compute_path_through_poses_action_bt_node
+      - nav2_smooth_path_action_bt_node
+      - nav2_follow_path_action_bt_node
+      - nav2_spin_action_bt_node
+      - nav2_wait_action_bt_node
+      - nav2_back_up_action_bt_node
+      - nav2_drive_on_heading_bt_node
+      - nav2_clear_costmap_service_bt_node
+      - nav2_is_stuck_condition_bt_node
+      - nav2_goal_reached_condition_bt_node
+      - nav2_goal_updated_condition_bt_node
+      - nav2_globally_updated_goal_condition_bt_node
+      - nav2_is_path_valid_condition_bt_node
+      - nav2_initial_pose_received_condition_bt_node
+      - nav2_reinitialize_global_localization_service_bt_node
+      - nav2_rate_controller_bt_node
+      - nav2_distance_controller_bt_node
+      - nav2_speed_controller_bt_node
+      - nav2_truncate_path_action_bt_node
+      - nav2_truncate_path_local_action_bt_node
+      - nav2_goal_updater_node_bt_node
+      - nav2_recovery_node_bt_node
+      - nav2_pipeline_sequence_bt_node
+      - nav2_round_robin_node_bt_node
+      - nav2_transform_available_condition_bt_node
+      - nav2_time_expired_condition_bt_node
+      - nav2_path_expiring_timer_condition
+      - nav2_distance_traveled_condition_bt_node
+      - nav2_single_trigger_bt_node
+      - nav2_goal_updated_controller_bt_node
+      - nav2_is_battery_low_condition_bt_node
+      - nav2_navigate_through_poses_action_bt_node
+      - nav2_navigate_to_pose_action_bt_node
+      - nav2_remove_passed_goals_action_bt_node
+      - nav2_planner_selector_bt_node
+      - nav2_controller_selector_bt_node
+      - nav2_goal_checker_selector_bt_node
+      - nav2_controller_cancel_bt_node
+      - nav2_path_longer_on_approach_bt_node
+      - nav2_wait_cancel_bt_node
+      - nav2_spin_cancel_bt_node
+      - nav2_back_up_cancel_bt_node
+      - nav2_drive_on_heading_cancel_bt_node
+```
+
+:::info
+The behavior of this node is defined by the XML file dubbed `behavior.xml` which contains the behavior tree. This behavior tree includes when to call the path planner, when to call the controller, and when to activate a recovery behavior. More on behavior trees later on in this note.
+
+behavior.xml
+
+```xml
+<!--
+  This Behavior Tree replans the global path periodically at 1 Hz, and has
+  recovery actions. Obtained from the official Nav2 package
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+            <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="FollowPath"/>
+          <ClearEntireCostmap service_name="local_costmap/clear_entirely_local_costmap"/>
+        </RecoveryNode>
+      </PipelineSequence>
+      <SequenceStar name="RecoveryActions">
+        <ClearEntireCostmap service_name="local_costmap/clear_entirely_local_costmap"/>
+        <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
+        <Spin spin_dist="1.57"/>
+        <Wait wait_duration="5"/>
+      </SequenceStar>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>
+```
+
+:::
+
+### Recoveries Server
+
+When a robot cannot find a valid path to the goal provided or gets stuck in the middle, we use recovery behaviors provided by recovery servers. These are simple predefined movements called via behavior trees. When the robot gets stuck, the `bt_navigator` will call the `recoverieS_server`.
+
+To Launch Recovery Servers:
+
+````py
+package='nav2_behaviors',
+executable='behavior_server', these in the ```config``` directory.
+<Tabs>
+name='behavior_server',
+output='screen',
+parameters=[recovery_yaml]
+````
+
+There are three recovery behaviors available in the Nav2 stack:
+
+- **spin**: performs an in-place rotation by a given angle
+- **backup**: performs a linear translation by a given distance
+- **wait**: brings the robot to a stationary state
+
+We can indicate which one of these behaviors we want to load within the config file `recovery_yaml`.
+
+##### recovery_yaml
+
+```yaml
+behavior_server:
+  ros__parameters:
+    costmap_topic: local_costmap/costmap_raw
+    footprint_topic: local_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    global_frame: odom
+    robot_base_frame: base_link
+    transform_timeout: 0.1
+    use_sim_time: true
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+```
+
+### Demo
+
+We'll start by first creating a new package using our favorite CMake build system. We'll then create two directories: `config` and `launch`.
+
+We then create these and place them in their respective directories.
+
+<Tabs>
+  <TabItem value="pathplanner.launch.py" label="pathplanner.launch.py">
+```py
+from launch import LaunchDescription
+from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
+import os
+
+def generate_launch_description():
+
+    planner_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'planner.yaml')
+    controller_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'controller.yaml')
+    recovery_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'recovery.yaml')
+    bt_navigator_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'bt_navigator.yaml')
+
+    return LaunchDescription([
+        Node(
+            package='nav2_planner',
+            executable='planner_server',
+            name='planner_server',
+            output='screen',
+            parameters=[planner_yaml]
+            ),
+        Node(
+            package='nav2_controller',
+            executable='controller_server',
+            name='controller_server',
+            output='screen', these in the ```config``` directory.
+
+<Tabs>                               these in the ```config``` directory.    
+<Tabs>                                                                                                                                                                
+            parameters=[controller_yaml],
+            ),
+        Node(
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            output='screen',
+            parameters=[bt_navigator_yaml],
+            ),
+        Node(
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='behavior_server',
+            output='screen',
+            parameters=[recovery_yaml],
+            ),
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_pathplanner',
+            output='screen',
+            parameters=[{'autostart': True},
+                        {'node_names': ['planner_server', 'controller_server', 'behavior_server', 'bt_navigator']}],
+            )
+        ])
+
+````
+  </TabItem>
+
+  <TabItem value="planner.yaml" label="planner.yaml">
+```yaml
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 10.0
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+````
+
+  </TabItem>
+  <TabItem value="controller.yaml" label="controller.yaml">
+```yaml
+controller_server:
+  ros__parameters:
+    use_sim_time: True
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"] 
+    controller_plugins: ["FollowPath"]
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.26
+      max_vel_y: 0.0
+      max_vel_theta: 1.0
+      min_speed_xy: 0.0
+      max_speed_xy: 0.26
+      min_speed_theta: 0.0
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      vx_samples: 20
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: True
+      stateful: True
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+
+````
+  </TabItem>
+
+  <TabItem value="bt_navigator.yaml" label="bt_navigator.yaml">
+```yaml
+bt_navigator:
+  ros__parameters:
+    use_sim_time: True
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    default_nav_to_pose_bt_xml: "/home/user/ros2_ws/src/path_planner_server/config/behavior.xml"
+    plugin_lib_names:
+    - nav2_compute_path_to_pose_action_bt_node
+    - nav2_compute_path_through_poses_action_bt_node
+    - nav2_smooth_path_action_bt_node
+    - nav2_follow_path_action_bt_node
+    - nav2_spin_action_bt_node
+    - nav2_wait_action_bt_node
+    - nav2_back_up_action_bt_node
+    - nav2_drive_on_heading_bt_node
+    - nav2_clear_costmap_service_bt_node
+    - nav2_is_stuck_condition_bt_node
+    - nav2_goal_reached_condition_bt_node
+    - nav2_goal_updated_condition_bt_node
+    - nav2_globally_updated_goal_condition_bt_node
+    - nav2_is_path_valid_condition_bt_node
+    - nav2_initial_pose_received_condition_bt_node
+    - nav2_reinitialize_global_localization_service_bt_node
+    - nav2_rate_controller_bt_node
+    - nav2_distance_controller_bt_node
+    - nav2_speed_controller_bt_node
+    - nav2_truncate_path_action_bt_node
+    - nav2_truncate_path_local_action_bt_node
+    - nav2_goal_updater_node_bt_node
+    - nav2_recovery_node_bt_node
+    - nav2_pipeline_sequence_bt_node
+    - nav2_round_robin_node_bt_node
+    - nav2_transform_available_condition_bt_node
+    - nav2_time_expired_condition_bt_node
+    - nav2_path_expiring_timer_condition
+    - nav2_distance_traveled_condition_bt_node
+    - nav2_single_trigger_bt_node
+    - nav2_goal_updated_controller_bt_node
+    - nav2_is_battery_low_condition_bt_node
+    - nav2_navigate_through_poses_action_bt_node
+    - nav2_navigate_to_pose_action_bt_node
+    - nav2_remove_passed_goals_action_bt_node
+    - nav2_planner_selector_bt_node
+    - nav2_controller_selector_bt_node
+    - nav2_goal_checker_selector_bt_node
+    - nav2_controller_cancel_bt_node
+    - nav2_path_longer_on_approach_bt_node
+    - nav2_wait_cancel_bt_node
+    - nav2_spin_cancel_bt_node
+    - nav2_back_up_cancel_bt_node
+    - nav2_drive_on_heading_cancel_bt_node
+````
+
+  </TabItem>
+
+  <TabItem value="recovery.yaml" label="recovery.yaml">
+```yaml
+behavior_server:
+  ros__parameters:
+    costmap_topic: local_costmap/costmap_raw
+    footprint_topic: local_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    global_frame: odom
+    robot_base_frame: base_link
+    transform_timeout: 0.1
+    use_sim_time: true
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+```
+  </TabItem>
+  <TabItem value="behavior.xml" label="behavior.xml">
+```xml
+<!--
+  This Behavior Tree replans the global path periodically at 1 Hz, and has
+  recovery actions. Obtained from the official Nav2 package
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+ these in the ```config``` directory.    
+<Tabs>                                                                                                           <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="FollowPath"/>
+          <ClearEntireCostmap service_name="local_costmap/clear_entirely_local_costmap"/>
+        </RecoveryNode>
+      </PipelineSequence>
+      <SequenceStar name="RecoveryActions">
+        <ClearEntireCostmap service_name="local_costmap/clear_entirely_local_costmap"/>
+        <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
+        <Spin spin_dist="1.57"/>
+        <Wait wait_duration="5"/>
+      </SequenceStar>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>
+```
+  </TabItem>
+</Tabs>
+
+:::info
+We have to be running in parallel our localization server, the one responsible for localizing our robot with the map and the one providing the base map environment.
+:::
+
+#### RVIZ2 Settings
+
+On top of our settings provided for localization, we add the `Path` display and change LineStyle to `BillBoards`. If everything is set, we can get something cool like below!
+
+<iframe
+  width="100%"
+  height="650px"
+  src={Demo}
+  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+  title="Demo Video"
+>
+  {" "}
+</iframe>
+
+#### Navigation Goal via CLI
+
+We can send a goal via the CLI through the server interface `/navigate_to_pose` or `goal_pose`.
+
+##### Action
+
+```bash
+ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "pose: {header: {frame_id: map}, pose: {position: {x: 1.52, y: 1.92, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0, w: 1.0000000}}}"
+```
+
+##### Topic
+
+```bash
+ros2 topic pub -1 /goal_pose geometry_msgs/PoseStamped "{header: {stamp: {sec: 0}, frame_id: 'map'}, pose: {position: {x: 2.2, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}"
+```
+
+#### ROS2 Node
+
+Taken directly from The Construct.
+
+```py
+import rclpy
+from nav2_msgs.action import NavigateToPose
+from rclpy.action import ActionClient
+from rclpy.node import Node
+from geometry_msgs.msg import PointStamped
+
+class NavToPoseActionClient(Node):
+
+    def __init__(self):
+        super().__init__('Nav_To_Pose_Action_Client')
+        self._action_client = ActionClient(self, NavigateToPose, '/navigate_to_pose')
+        self.subscriber_ = self.create_subscription(PointStamped, 'clicked_point', self.callback, 1)
+        self.subscriber_  # prevent unused variable warning
+
+    def callback(self, msg):
+        self.get_logger().info('Recieved Data:\n X : %f \n Y : %f \n Z : %f' % (msg.point.x, msg.point.y, msg.point.z))
+        self.send_goal (msg.point.x, msg.point.y, 0.0)
+
+    def send_goal(self, x ,y, theta):
+        self.get_logger().info('sending goal to action server')
+        goal_pose = NavigateToPose.Goal()
+        goal_pose.pose.header.frame_id = 'map'
+        goal_pose.pose.pose.position.x = x
+        goal_pose.pose.pose.position.y = y
+        goal_pose.pose.pose.position.z = theta
+
+        self.get_logger().info('waiting for action server')
+        self._action_client.wait_for_server()
+        self.get_logger().info('action server detected')
+
+        self._send_goal_future = self._action_client.send_goal_async(
+            goal_pose,
+            feedback_callback=self.feedback_callback)
+        self.get_logger().info('goal sent')
+
+        self._send_goal_future.add_done_callback(self.goal_response_callback)
+
+    def goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected :(')
+            return
+        self.get_logger().info('Goal accepted :)')
+        self._get_result_future = goal_handle.get_result_async()
+
+        self._get_result_future.add_done_callback(self.get_result_callback)
+
+    def get_result_callback(self, future):
+        result = future.result().result
+        self.get_logger().info('Result: {0}' + str(result))
+        rclpy.shutdown()
+
+    def feedback_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+        self.get_logger().info('FEEDBACK:' + str(feedback) )
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    action_client = NavToPoseActionClient()
+
+    rclpy.spin(action_client)
+
+
+if __name__ == '__main__':
+    main()
+```
+
+Used via RVIZ and `Publish Point` feature.
+
+## Obstacle Avoidance
+
+The Nav2 stack avoids dynamic and static obstacles by utilizing what's known as costmaps.
+
+### Costmaps
+
+A Costmap is a 2D representation of robot-sensed obstacles on a grid map. Each grid cells contain information about the obstacles detected by the sensors. The cost of the cell can be unknown, free, occupied, or inflated. Different colors indicate how likely it is to colide against an obstacle. Using this information, the Nav2 stack can compute their tasks safely and efficiently.
+
+There are two kinds of costmaps: `global` and `local`.
+
+1. `global`: generated from obstacles on a static map and is used by the `planner` to generate long term path.
+2. `local`: created from new obstacles during runtime(sensors) and is used by the `controller` to generate short-term path
