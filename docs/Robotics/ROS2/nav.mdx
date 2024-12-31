@@ -1117,7 +1117,8 @@ behavior_server:
       <PipelineSequence name="NavigateWithReplanning">
         <RateController hz="1.0">
           <RecoveryNode number_of_retries="1" name="ComputePathToPose">
-            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>                               <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>                               
+            <ClearEntireCostmap service_name="global_costmap/clear_entirely_global_costmap"/>
           </RecoveryNode>
         </RateController>
         <RecoveryNode number_of_retries="1" name="FollowPath">
@@ -1335,21 +1336,15 @@ global_costmap:
 ```
   </TabItem>
 
-{" "}
-
 <TabItem value="static_layer" label="static_layer">
   ```yaml static_layer: plugin: "nav2_costmap_2d::StaticLayer"
   map_subscribe_transient_local: True ```
 </TabItem>
 
-{" "}
-
 <TabItem value="inflation_layer" label="inflation_layer">
   ```yaml inflation_layer: plugin: "nav2_costmap_2d::InflationLayer"
   cost_scaling_factor: 3.0 inflation_radius: 0.35 ```
 </TabItem>
-
-{" "}
 
 <TabItem value="obstacle_layer" label="obstacle_layer">
   ```yaml obstacle_layer: plugin: "nav2_costmap_2d::ObstacleLayer" enabled: True
