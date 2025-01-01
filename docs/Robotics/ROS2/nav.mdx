@@ -15,6 +15,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import Demo from "@site/docs/Robotics/ROS2/assets/demo.mp4";
 import CostMap from "@site/docs/Robotics/ROS2/assets/costmap.jpg";
+import CostMapDemo from "@site/docs/Robotics/ROS2/assets/demo_costmap.mp4";
 
 :::danger
 This has not been proof-read or modified for simpler reading yet.
@@ -465,16 +466,12 @@ We can use the `2D Pose Estimate` to tell our `AMCL` system to start localizing 
 
 If we start moving our robot, our estimation and localization starts to fit better.
 
-<iframe
+<video
   width="100%"
-  height="650px"
   src={Localization}
-  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen
+  controls
   title="Localization Video"
->
-  {" "}
-</iframe>
+></video>
 
 :::info
 For 2D Localization, we only need $(x,y, \theta)$ and are the variables used for setting the robot in the `map` frame. We can compute $(x,y,\theta)$ by using the AMCL.
@@ -1147,16 +1144,14 @@ We have to be running in parallel our localization server, the one responsible f
 
 On top of our settings provided for localization, we add the `Path` display and change LineStyle to `BillBoards`. If everything is set, we can get something cool like below!
 
-<iframe
+<video
   width="100%"
-  height="650px"
   src={Demo}
-  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen
+  controls
   title="Demo Video"
 >
-  {" "}
-</iframe>
+
+</video>
 
 #### Navigation Goal via CLI
 
@@ -1337,16 +1332,20 @@ global_costmap:
   </TabItem>
 
 <TabItem value="static_layer" label="static_layer">
-  ```yaml static_layer: plugin: "nav2_costmap_2d::StaticLayer"
+  Represents a largely unchanging portion of the Costmap, like those generated
+  by SLAM. ```yaml static_layer: plugin: "nav2_costmap_2d::StaticLayer"
   map_subscribe_transient_local: True ```
 </TabItem>
 
 <TabItem value="inflation_layer" label="inflation_layer">
-  ```yaml inflation_layer: plugin: "nav2_costmap_2d::InflationLayer"
-  cost_scaling_factor: 3.0 inflation_radius: 0.35 ```
+  Adds new values around lethal obstacles to make the Costmap represent robot's
+  configuration space. ```yaml inflation_layer: plugin:
+  "nav2_costmap_2d::InflationLayer" cost_scaling_factor: 3.0 inflation_radius:
+  0.35 ```
 </TabItem>
 
 <TabItem value="obstacle_layer" label="obstacle_layer">
+  Tracks obstacles read by sensor data and marks/raytraces obstacles in 2D.
   ```yaml obstacle_layer: plugin: "nav2_costmap_2d::ObstacleLayer" enabled: True
   observation_sources: scan scan: topic: /scan max_obstacle_height: 2.0
   clearing: True marking: True data_type: "LaserScan" raytrace_max_range: 3.0
@@ -1354,6 +1353,7 @@ global_costmap:
 </TabItem>
 
   <TabItem value="voxel_layer" label="voxel_layer">
+Responsible for including 3D detected obstacles in the 2D costmaps.
 ```yaml
 voxel_layer:
   plugin: "nav2_costmap_2d::VoxelLayer"
@@ -1431,3 +1431,30 @@ local_costmap:
         map_subscribe_transient_local: True
       always_send_full_costmap: True
 ```
+
+:::info
+The robot's shape can influence what extent the obstacles in the Costmaps will be inflated to. This is then taken into consideration when computing a path to said point. We can specify our robot's shape within our costmap parameters in both local and global.
+
+When we use round robots, we use the parameter `robot_radius`. For more complex robots that aren't round, we have to use `footprint` parameter instead that specifies the coordinates for each point of the robot. The `footprint` parameter is the project of the robot on the ground. For example, if a square robot has 65 cm per side, we would specify:
+
+```yaml
+footprint: "[[0.325, 0.325], [0.325, -0.325], [-0.325, -0.325], [-0.325, 0.325]]"
+```
+
+We also have to change the `controller.yaml` configuration:
+
+- `BaseObstacle` if using `robot_radius`
+- `ObstacleFootprint` if using `footprint`
+
+Remember that we can only specify one parameter: `footprint` or `robot_radius`.
+:::
+
+### Demo
+
+<video width="100%" controls src={CostMapDemo} title="Demo Video"></video>
+
+## Path Planner Package
+
+Currently, we have two packages: `localization` and `path_planner`. One does the localization and mapping while the other does the path planning. Ideally, for a full navigaiton system, we want a single package with one `nav2_lifecycle_manager` managing all navigation nodes.
+
+How you wanna structure it is up to you, and having separate packages can be good for debugging, but ideally, in real navigation systems for deployment, you want one package for ease of use with one single launch file.
