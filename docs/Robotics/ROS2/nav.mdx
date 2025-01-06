@@ -4,7 +4,7 @@ title: Nav2
 hide_title: true
 sidebar_position: 1
 last_update:
-  date: 12/18/2024
+  date: 1/1/2025
   author: Kevin Shin
 ---
 
@@ -16,6 +16,7 @@ import TabItem from "@theme/TabItem";
 import Demo from "@site/docs/Robotics/ROS2/assets/demo.mp4";
 import CostMap from "@site/docs/Robotics/ROS2/assets/costmap.jpg";
 import CostMapDemo from "@site/docs/Robotics/ROS2/assets/demo_costmap.mp4";
+import MultiMap from "@site/docs/Robotics/ROS2/assets/multi.jpg";
 
 :::danger
 This has not been proof-read or modified for simpler reading yet.
@@ -1453,8 +1454,817 @@ Remember that we can only specify one parameter: `footprint` or `robot_radius`.
 
 <video width="100%" controls src={CostMapDemo} title="Demo Video"></video>
 
-## Path Planner Package
+### Path Planner Package
 
 Currently, we have two packages: `localization` and `path_planner`. One does the localization and mapping while the other does the path planning. Ideally, for a full navigaiton system, we want a single package with one `nav2_lifecycle_manager` managing all navigation nodes.
 
 How you wanna structure it is up to you, and having separate packages can be good for debugging, but ideally, in real navigation systems for deployment, you want one package for ease of use with one single launch file.
+
+```py
+import os
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+
+    controller_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'controller.yaml')
+    bt_navigator_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'bt_navigator.yaml')
+    planner_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'planner_server.yaml')
+    recovery_yaml = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'recovery.yaml')
+    amcl_yaml = os.path.join(get_package_share_directory('localization_server'), 'config', 'amcl_config.yaml')
+    map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area.yaml')
+
+    return LaunchDescription([
+        Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='map_server',
+            output='screen',
+            parameters=[{'use_sim_time': True},
+                        {'yaml_filename':map_file}]
+        ),
+
+        Node(
+            package='nav2_amcl',
+            executable='amcl',
+            name='amcl',
+            output='screen',
+            parameters=[amcl_yaml]
+        ),
+        Node(
+            package='nav2_controller',
+            executable='controller_server',
+            name='controller_server',
+            output='screen',
+            parameters=[controller_yaml]),
+
+        Node(
+            package='nav2_planner',
+            executable='planner_server',
+            name='planner_server',
+            output='screen',
+            parameters=[planner_yaml]),
+
+        Node(
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='recoveries_server',
+            parameters=[recovery_yaml],
+            output='screen'),
+
+        Node(
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            output='screen',
+            parameters=[bt_navigator_yaml]),
+
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager',
+            output='screen',
+            parameters=[{'autostart': True},
+                        {'node_names': ['map_server',
+                                        'amcl',
+                                        'controller_server',
+                                        'planner_server',
+                                        'recoveries_server',
+                                        'bt_navigator']}])
+    ])
+```
+
+## Multi-robot Navigation
+
+In the scenario you have multiple robots, each robot will have the same `/cmd_vel` topic name, same `base_footprint` frame name and even the same control node name. This is complicated because the navigation stack won't know which robot it's talking to. We can bypass this by using `namespaces` which are labels we assign to each robot. This means that each robot may have the same name but will have a unique `namespace` for it. `namespaces` are configured at:
+
+1. **Simulated Robots**: At the URDF description file and the Gazebo plugins
+2. **Real Robots**: At the bring-up routine provided by the vendor
+
+If these are not configured properly, the robots will have difficulty booting into `namespaces` mode. For two robots, we could have the following:
+
+```text
+/clock
+/parameter_events
+/performance_metrics
+/rosout
+/tb3_0/cmd_vel
+/tb3_0/imu
+/tb3_0/joint_states
+/tb3_0/odom
+/tb3_0/robot_description
+/tb3_0/scan
+/tb3_1/cmd_vel
+/tb3_1/imu
+/tb3_1/joint_states
+/tb3_1/odom
+/tb3_1/robot_description
+/tb3_1/scan
+/tf
+/tf_static
+```
+
+### Configuration
+
+To have a multiagent system that uses the same nav stack, we need for each robot:
+
+- `localization`
+- `controller_server`
+- `planner_server`
+- `bt_navigator`
+
+The only thing that'll be used by all is the `map_server` as all robots will use the same map.
+
+### Mapping
+
+It is possible to have multiple robots collaborate to create a single map between them but that is covered later on. This tutorial goes over:
+
+1. One robot from the fleet in charge of making the robot
+2. A single `map_server` is launched using that map
+3. All the navigation systems for each robot will use the same name by asking for the same `map_server`
+
+#### Multirobot cartographer
+
+There isn't much difference when trying to do multirobot navigation. For mapping, al lwe do is add and modify a few lines of code. For this, we use our cartographer config files and simply add these few lines of code below.
+
+<Tabs>
+  <TabItem value="cartographer_multi.lua" label="cartographer_multi.lua">
+```lua
+tracking_frame = "tb3_0/base_footprint",
+published_frame = "tb3_0/odom",
+odom_frame = "tb3_0/odom"
+```
+  </TabItem>
+
+{" "}
+<TabItem
+  value="multi_cartographer.launch.py"
+  label="multi_cartographer.launch.py"
+>
+  ```py # cartographer_node remappings=[ ('/cmd_vel', '/tb3_0/cmd_vel'),
+  ('/odom', '/tb3_0/odom'), ('/scan', '/tb3_0/scan'), ] ```
+</TabItem>
+
+</Tabs>
+
+:::warn
+When localizing with one single robot as above and having the other stand still, the map will think the idle robot is an obstacle.
+:::
+
+### Localization
+
+We can launch a localization system for each robot. This means launching two `amcl` nodes each configured for their respective robot.
+
+<Tabs>
+  <TabItem value="Step 1" label="Step 1">
+- Add a ```namespace``` variable to the launches of ```amcl``` nodes.
+- Create a new launch file named ```multi_localization.launch.py``` to include two ```amcl``` nodes, each with a different namespace, according to the robot it will localize. Note that each node's parameters argument must point to **two** config files.
+- Try to use the cleaned map that doesn't include the idle robot as an obstacle. You can edit the ```.pgm``` file using ```GIMP```.
+
+```py
+Node(
+      namespace="tb3_0",
+      package="nav2_amcl",
+      executable="amcl",
+      name="amcl",
+      output="screen",
+      parameters=[tb3_0_config],
+      ),
+Node(
+      namespace="tb3_1",
+      package="nav2_amcl",
+      executable="amcl",
+      name+"amcl",
+      output="screen",
+      parameters=[tb3_1_config],
+      ),
+```
+
+</TabItem>
+
+<TabItem label="Step 2" value="Step 2">
+- Create two copies of the ```amcl_config.yaml``` file, with each one of the names referencing the robot it controls. Example: ```tb3_0_amcl_config.yaml```
+- Modify the ```amcl_config.yaml``` files to make sure it fits the robot needs.
+- - Modifying the first line to contain the **full new name** of the node.
+- - All frames must be modified to include the ```namespace```. The only frame that doesn't have to be changed is the ```global_frame_id``` sincei t's a global single frame for all the robots.
+- - Topics don't need to be modified because the ```namespace``` arguments of the launch file automatically modifies them. This doesn't apply to frames.
+- - The ```map_topic``` parameters must be forced to ```/map```. If we don't do this with ```/```, then it automatically uses ```tb3_0/map``` as the topic which isn't the topic the map server publishes.
+- Import the two config files into the ```multi_localization.launch.py```
+- Assign it to their respective nodes.
+
+```yaml
+# tb3_0_amcl_config.yaml
+tb3_0/amcl:
+  ros__parameters:
+    use_sim_time: True
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "tb3_0/base_footprint"
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+    do_beamskip: false
+    global_frame_id: "map"
+    lambda_short: 0.1
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 100.0
+    laser_min_range: -1.0
+    laser_model_type: "likelihood_field"
+    max_beams: 60
+    max_particles: 8000
+    min_particles: 200
+    odom_frame_id: "tb3_0/odom"
+    pf_err: 0.05
+    pf_z: 0.99
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    resample_interval: 1
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    save_pose_rate: 0.5
+    sigma_hit: 0.2
+    tf_broadcast: true
+    transform_tolerance: 1.0
+    update_min_a: 0.2
+    update_min_d: 0.25
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    scan_topic: "/tb3_0/scan"
+    map_topic: "/map"
+    set_initial_pose: true
+    initial_pose:
+      x: 0.0
+      y: 0.0
+      yaw: 0.0
+```
+
+</TabItem>
+
+<TabItem label="Step 3" value="Step 3">
+- Add the full node names to the lifecycle manager with their ```namespaces```
+:::info
+We have to add a new parameter ```{'bond_timeout': 0.0}``` to prevent launching errors
+:::
+
+```py
+Node(
+    package='nav2_lifecycle_manager',
+    executable='lifecycle_manager',
+    name='lifecycle_manager_localization',
+    output='screen',
+    parameters=[{'use_sim_time': True},
+                {'autostart': True},
+                {'bond_timeout':0.0},
+                {'node_names': ['map_server', 'tb3_0/amcl', 'tb3_1/amcl']}]
+)
+```
+
+</TabItem>
+
+<TabItem label="Step 4" value="Step 4">
+- Modify the ```map_server``` launch file.
+- Specify the ```topic_name``` and ```frame_id``` of the ```map_server```. These parameters aren't configured when we do a single robot ```map_server```.
+```py
+Node(
+    package='nav2_map_server',
+    executable='map_server',
+    name='map_server',
+    output='screen',
+    parameters=[{'use_sim_time': True}, 
+                {'topic_name':"map"},
+                {'frame_id':"map"},
+                {'yaml_filename':map_file}]
+),
+```
+
+The final launch file should be:
+
+```py
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+
+    tb3_0_nav2_yaml = os.path.join(get_package_share_directory('localization_server'), 'config', 'tb3_0_amcl_config.yaml')
+    tb3_1_nav2_yaml = os.path.join(get_package_share_directory('localization_server'), 'config', 'tb3_1_amcl_config.yaml')
+    map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area_two_robots_clean.yaml')
+
+    return LaunchDescription([
+        Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='map_server',
+            output='screen',
+            parameters=[{'use_sim_time': True},
+                        {'topic_name':"map"},
+                        {'frame_id':"map"},
+                        {'yaml_filename':map_file}]
+        ),
+
+        Node(
+            namespace='tb3_0',
+            package='nav2_amcl',
+            executable='amcl',
+            name='amcl',
+            output='screen',
+            parameters=[tb3_0_nav2_yaml]
+        ),
+        Node(
+            namespace='tb3_1',
+            package='nav2_amcl',
+            executable='amcl',
+            name='amcl',
+            output='screen',
+            parameters=[tb3_1_nav2_yaml]
+        ),
+
+
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_localization',
+            output='screen',
+            parameters=[{'use_sim_time': True},
+                        {'autostart': True},
+                        {'bond_timeout':0.0},
+                        {'node_names': ['map_server', 'tb3_0/amcl', 'tb3_1/amcl']}]
+        )
+    ])
+```
+
+</TabItem>
+
+</Tabs>
+
+#### Configuring RVIZ2
+
+- Load the RVIZ configuration of the localization unit: `.rviz`
+- Modify the topic of the `LaserScan` to point to the `tb3_0/scan` and indicate the `Color Transformer` as `FlatColor`.
+- Add another `LaserScan` and make it `tb3_1/scan` with `Color Transformer` as the same as previous but different color.
+- Modify the `RobotModel` display as below:
+- - In the `Description Source`, select `Topic` and indicate `/tb3_0/robot_description`.
+- - In the `TF prefix`, indicate the namespace of the robot, which for tb3_0 is `tb3_0`.
+- Do the same for `tb3_1`.
+- Add the `Panel` of `Tool Properties` and modify it such that the topics for `2D Pose Estimate`. (You do this to localize each robot individually)
+- - Should always be `/namespace/topic_name`.
+- You should relaunch the simulation because the robots will **drift** if given a long time of idling in the simulation. Then localize by doing the `2D Pose Estimate`.
+
+After, we should get something like this:
+
+<img src={MultiMap.src} width="100%" />
+<img src="https://s3.eu-west-1.amazonaws.com/notebooks.ws/ros2-navigation-humble-148/images/global_tf_localized.png" />
+
+### Path Planning
+
+To path plan for multiple robots, we need n path planning node systems. This means for our two robot, we need:
+
+- two `controller_server` nodes
+- two `planner_server` nodes
+- two `recoveries_server` nodes
+- two `bt_navigator` nodes
+
+<Tabs>
+  <TabItem label="Step 1" value="Step 1">
+- Add a ```namespace``` to the launches of the nodes.
+
+Example below for one single node, the `planner_server`. We need to do this for the 4 nodes, for each robot, meaning we should have 8 nodes in total for the path planning system.
+
+```py
+Node(
+    namespace='tb3_0',
+    package='nav2_planner',
+    executable='planner_server',
+    name='planner_server',
+    output='screen',
+    parameters=[planner_yaml_tb1_0]
+),
+```
+
+</TabItem>
+
+<TabItem label="Step 2" value="Step 2">
+- Create respective config files for each robot. 
+- This means two of each yamls for ```planner_server```, ```controller```, ```bt_navigator```, ```recovery``` files.
+- Modify the content of each file and name it with good convention such as ```tb3_0_planner_server.yaml```.
+- - First line must contain the full new name of the node: ```tb3_0/planner_server```
+- - All frames of the config must be modified to include the ```namespace```. The ```global_frame_id``` doesn't need to since it's a single global frame.
+- - Topics don't need to be modified since they're done via launch file with the argument ```namespace```.
+- - The ```map_topic``` must be forced to ```/map``` or else the map server will be publishing to ```tb3_0/map```.
+
+<Tabs>
+  <TabItem label="planner_server" value="planner_server">
+- Change ```global_costmap``` to include the namespace: ```tb3_0/global_costmap```.
+- Do the same for ```robot_base_frame```: ```robot_base_frame: tb3_0/base_link```.
+
+```yaml
+tb3_0/planner_server:
+  ros__parameters:
+    expected_planner_frequency: 10.0
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+
+tb3_0/global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      global_frame: map
+      # This has to be set
+      map_topic: /map
+      robot_base_frame: tb3_0/base_link
+      use_sim_time: True
+      robot_radius: 0.15
+      resolution: 0.05
+      track_unknown_space: true
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: True
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 3.0
+        inflation_radius: 0.35
+      always_send_full_costmap: True
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: scan
+        scan:
+          # The scan is let as is because with namespace on topc it remaps properly , NO f.slash
+          topic: /tb3_0/scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+```
+
+  </TabItem>
+
+  <TabItem label="controller.yaml" value="controller.yaml">
+- Same as planner_server
+```yaml
+tb3_0/controller_server:
+  ros__parameters:
+    use_sim_time: True
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"] 
+    controller_plugins: ["FollowPath"]
+
+    # Progress checker parameters
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
+    # Goal checker parameters
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+    # DWB parameters
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 0.26
+      max_vel_y: 0.0
+      max_vel_theta: 1.0
+      min_speed_xy: 0.0
+      max_speed_xy: 0.26
+      min_speed_theta: 0.0
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      vx_samples: 20
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 1.7
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: True
+      stateful: True
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+
+tb3_0/local_costmap:
+local_costmap:
+ros\_\_parameters:
+update_frequency: 5.0
+publish_frequency: 2.0
+global_frame: tb3_0/odom
+robot_base_frame: tb3_0/base_link
+use_sim_time: True
+rolling_window: true
+width: 1
+height: 1
+resolution: 0.05
+robot_radius: 0.15
+plugins: ["voxel_layer", "inflation_layer"]
+inflation_layer:
+plugin: "nav2_costmap_2d::InflationLayer"
+cost_scaling_factor: 3.0
+inflation_radius: 0.35
+voxel_layer:
+plugin: "nav2_costmap_2d::VoxelLayer"
+enabled: True
+publish_voxel_map: True
+origin_z: 0.0
+z_resolution: 0.05
+z_voxels: 16
+max_obstacle_height: 2.0
+mark_threshold: 0
+observation_sources: scan
+scan:
+topic: /tb3_0/scan
+max_obstacle_height: 2.0
+clearing: True
+marking: True
+data_type: "LaserScan"
+raytrace_max_range: 3.0
+raytrace_min_range: 0.0
+obstacle_max_range: 2.5
+obstacle_min_range: 0.0
+static_layer:
+map_subscribe_transient_local: True
+always_send_full_costmap: True
+
+````
+  </TabItem>
+
+  <TabItem label="bt_navigator.yaml" value="bt_navigator.yaml">
+- Set the ```base_frame``` to include ```namespace```.
+- Set the ```default_nav_to_pose_bt_xml``` via absolute path. If you wanna do relative, you can. ```default_nav_to_pose_bt_xml: "/home/user/ros2_ws/src/path_planner_server/config/behavior.xml"```
+- Also remove the publication of behavior status of Groot or else the Groot introspection port for one ```bt-navigator``` will collide with the port of the other. [Reference](https://github.com/ros-navigation/navigation2/issues/2386)
+- - To disconnect, add to eahc of the ```bt-navigator```: ```enable_groot_monitoring: false```
+```yaml
+tb3_0/bt_navigator:
+  ros__parameters:
+    use_sim_time: True
+    global_frame: map
+    robot_base_frame: tb3_0/base_link
+    odom_topic: tb3_0/odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    default_nav_to_pose_bt_xml: "/home/user/ros2_ws/src/path_planner_server/config/behavior.xml"
+    enable_groot_monitoring: false
+    plugin_lib_names:
+    - nav2_compute_path_to_pose_action_bt_node
+    - nav2_compute_path_through_poses_action_bt_node
+    - nav2_smooth_path_action_bt_node
+    - nav2_follow_path_action_bt_node
+    - nav2_spin_action_bt_node
+    - nav2_wait_action_bt_node
+    - nav2_back_up_action_bt_node
+    - nav2_drive_on_heading_bt_node
+    - nav2_clear_costmap_service_bt_node
+    - nav2_is_stuck_condition_bt_node
+    - nav2_goal_reached_condition_bt_node
+    - nav2_goal_updated_condition_bt_node
+    - nav2_globally_updated_goal_condition_bt_node
+    - nav2_is_path_valid_condition_bt_node
+    - nav2_initial_pose_received_condition_bt_node
+    - nav2_reinitialize_global_localization_service_bt_node
+    - nav2_rate_controller_bt_node
+    - nav2_distance_controller_bt_node
+    - nav2_speed_controller_bt_node
+    - nav2_truncate_path_action_bt_node
+    - nav2_truncate_path_local_action_bt_node
+    - nav2_goal_updater_node_bt_node
+    - nav2_recovery_node_bt_node
+    - nav2_pipeline_sequence_bt_node
+    - nav2_round_robin_node_bt_node
+    - nav2_transform_available_condition_bt_node
+    - nav2_time_expired_condition_bt_node
+    - nav2_path_expiring_timer_condition
+    - nav2_distance_traveled_condition_bt_node
+    - nav2_single_trigger_bt_node
+    - nav2_goal_updated_controller_bt_node
+    - nav2_is_battery_low_condition_bt_node
+    - nav2_navigate_through_poses_action_bt_node
+    - nav2_navigate_to_pose_action_bt_node
+    - nav2_remove_passed_goals_action_bt_node
+    - nav2_planner_selector_bt_node
+    - nav2_controller_selector_bt_node
+    - nav2_goal_checker_selector_bt_node
+    - nav2_controller_cancel_bt_node
+    - nav2_path_longer_on_approach_bt_node
+    - nav2_wait_cancel_bt_node
+    - nav2_spin_cancel_bt_node
+    - nav2_back_up_cancel_bt_node
+    - nav2_drive_on_heading_cancel_bt_node
+````
+
+:::info
+We use the same `behavior.xml` for both robots.
+:::
+
+</TabItem>
+
+<TabItem label="recovery.yaml" value="recovery.yaml">
+- Same steps as first two.
+```yaml
+tb3_0/behavior_server:
+  ros__parameters:
+    costmap_topic: local_costmap/costmap_raw
+    footprint_topic: local_costmap/published_footprint
+    cycle_frequency: 10.0
+    behavior_plugins: ["spin", "backup", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    global_frame: tb3_0/odom
+    robot_base_frame: tb3_0/base_link
+    transform_timeout: 0.1
+    use_sim_time: true
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
+```
+ </TabItem>
+</Tabs>
+
+</TabItem>
+
+  <TabItem label="Step 3" value="Step 3">
+- Add the nodes to the lifecycle manager
+```py
+Node(
+    package='nav2_lifecycle_manager',
+    executable='lifecycle_manager',
+    name='lifecycle_manager_pathplanner',
+    output='screen',
+    parameters=[{'autostart': True},
+                {'bond_timeout':0.0},
+                {'node_names': [
+                                'tb3_0/planner_server',
+                                'tb3_0/controller_server',
+                                'tb3_0/recoveries_server',
+                                'tb3_0/bt_navigator',
+                                'tb3_1/planner_server',
+                                'tb3_1/controller_server',
+                                'tb3_1/recoveries_server',
+                                'tb3_1/bt_navigator'
+                                ]}])
+```
+The final launch file should look like this.
+```py
+import os
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+
+    controller_yaml_tb3_0 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_0_controller.yaml')
+    planner_yaml_tb3_0 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_0_planner_server.yaml')
+    recovery_yaml_tb3_0 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_0_recovery.yaml')
+    bt_navigator_yaml_tb3_0 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_0_bt_navigator.yaml')
+
+    controller_yaml_tb3_1 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_1_controller.yaml')
+    planner_yaml_tb3_1 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_1_planner_server.yaml')
+    recovery_yaml_tb3_1 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_1_recovery.yaml')
+    bt_navigator_yaml_tb3_1 = os.path.join(get_package_share_directory('path_planner_server'), 'config', 'tb3_1_bt_navigator.yaml')
+
+
+    return LaunchDescription([
+
+        ## TB3_0
+        Node(
+            namespace='tb3_0',
+            package='nav2_controller',
+            executable='controller_server',
+            name='controller_server',
+            output='screen',
+            parameters=[controller_yaml_tb3_0]),
+
+        Node(
+            namespace='tb3_0',
+            package='nav2_planner',
+            executable='planner_server',
+            name='planner_server',
+            output='screen',
+            parameters=[planner_yaml_tb3_0]),
+
+        Node(
+            namespace='tb3_0',
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='recoveries_server',
+            parameters=[recovery_yaml_tb3_0],
+            output='screen'),
+
+        Node(
+            namespace='tb3_0',
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            output='screen',
+            parameters=[bt_navigator_yaml_tb3_0]),
+
+        # ## TB3_1
+        Node(
+            namespace='tb3_1',
+            package='nav2_controller',
+            executable='controller_server',
+            name='controller_server',
+            output='screen',
+            parameters=[controller_yaml_tb3_1]),
+
+        Node(
+            namespace='tb3_1',
+            package='nav2_planner',
+            executable='planner_server',
+            name='planner_server',
+            output='screen',
+            parameters=[planner_yaml_tb3_1]),
+
+        Node(
+            namespace='tb3_1',
+            package='nav2_behaviors',
+            executable='behavior_server',
+            name='recoveries_server',
+            parameters=[recovery_yaml_tb3_1],
+            output='screen'),
+
+        Node(
+            namespace='tb3_1',
+            package='nav2_bt_navigator',
+            executable='bt_navigator',
+            name='bt_navigator',
+            output='screen',
+            parameters=[bt_navigator_yaml_tb3_1]),
+
+
+        ## LIFECICLE MANAGER
+        Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager',
+            output='screen',
+
+            parameters=[{'autostart': True},
+                        {'bond_timeout':0.0},
+                        {'node_names': ['tb3_0/controller_server',
+                                        'tb3_0/planner_server',
+                                        'tb3_0/recoveries_server',
+                                        'tb3_0/bt_navigator',
+                                        'tb3_1/controller_server',
+                                        'tb3_1/planner_server',
+                                        'tb3_1/recoveries_server',
+                                        'tb3_1/bt_navigator',
+                                        ]}])
+    ])
+
+```
+
+</TabItem>
+
+</Tabs>
+
+:::info
+The order is localization -> path_planning -> rviz2 for launches.
+:::
+
+```
