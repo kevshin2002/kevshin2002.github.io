@@ -4,7 +4,7 @@ title: Nav2
 hide_title: true
 sidebar_position: 1
 last_update:
-  date: 1/1/2025
+  date: 1/7/2025
   author: Kevin Shin
 ---
 
@@ -17,6 +17,7 @@ import Demo from "@site/docs/Robotics/ROS2/assets/demo.mp4";
 import CostMap from "@site/docs/Robotics/ROS2/assets/costmap.jpg";
 import CostMapDemo from "@site/docs/Robotics/ROS2/assets/demo_costmap.mp4";
 import MultiMap from "@site/docs/Robotics/ROS2/assets/multi.jpg";
+import MultiPath from "@site/docs/Robotics/ROS2/assets/multipath.mp4";
 
 :::danger
 This has not been proof-read or modified for simpler reading yet.
@@ -2256,7 +2257,7 @@ def generate_launch_description():
                                         ]}])
     ])
 
-```
+````
 
 </TabItem>
 </Tabs>
@@ -2265,4 +2266,83 @@ def generate_launch_description():
 The order is localization -> path_planning -> rviz2 for launches.
 :::
 
-```
+### Configuring RVIZ2
+- Add a ```Path``` display configured for the ```/tb3_0/plan``` topic and select the ```Line Style``` as ```Billboards``` with Red as it's color.
+- Add another ```Path``` for the ```/tb3_1/plan``` and choose a different color for it.
+- Add a ```Map``` display and configure the topic for the global costmap: ```/tb3_0/global_costmap/costmap```
+- Add another ```Map``` for ```/tb3_1/global_costmap/costmap```.
+- Add another ```Map``` for the **local** costmap for again each of the topics: ```/tb_3_0/local_costmap/costmap``` and ```/tb3_1/local_costmap/costmap```.
+- All the ```cost_maps``` change the color scheme from ```map``` to ```cost_map``` to see the nice colors.
+- To make the robot move, use the ```Tool Properties``` and change the ```2D Goal Pose``` to be ```/tb3_0/goal_pose``` and then use the ```2D Goal Pose```. For the other robot, use the other namespace ```/tb3_1/goal_pose```.
+
+### Single Launch
+To make this simpler, we can create several launch files to concentrate everything into a single launch. Inside of our ```path_planner_server```, we can create the launch ```multi_main.launch.xml```. Inside the ```cartographer_slam```, we also create the launch file ```start_rviz.launch.py``` which'll launch ```RVIZ2``` without terminal commands. Both of these files should be inside of the ```launch``` directory.
+
+<Tabs>
+  <TabItem label="multi_main.launch.xml" value="multi_main.launch.xml">
+```xml
+<?xml version='1.0' ?>
+
+<launch>
+    <include file="$(find-pkg-share localization)/launch/multi_localization.launch.py"/>
+    <include file="$(find-pkg-share path_planner_server)/launch/multi_pathplanner.launch.py"/>
+
+    <include file="$(find-pkg-share cartographer_slam)/launch/start_rviz.launch.py">
+        <arg name="use_sim_time" value="true"/>
+        <arg name="rviz_config_dir" value="$(find-pkg-share cartographer_slam)/rviz/tb3_1_and_2.rviz" />
+    </include>
+
+</launch>
+````
+
+</TabItem>
+
+<TabItem label="start_rviz.launch.py" value="start_rviz.launch.py">
+```py
+import os
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+def generate_launch_description():
+use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+rviz_config_dir = LaunchConfiguration("rviz_config_dir")
+
+    return LaunchDescription([
+
+
+        DeclareLaunchArgument(
+            "rviz_config_dir", default_value="", description="TRviz"),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true'),
+
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            arguments=['-d', rviz_config_dir],
+            parameters=[{'use_sim_time': use_sim_time}],
+            output='screen'),
+    ])
+
+````
+
+</TabItem>
+
+</Tabs>
+
+Then launch via:
+```bash
+ros2 launch path_planner_server multi_main.launch.xml
+````
+
+<video
+  width="100%"
+  controls
+  src={MultiPath}
+  title="MultiPath Agents Video"
+></video>
