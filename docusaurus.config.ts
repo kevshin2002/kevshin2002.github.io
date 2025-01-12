@@ -52,6 +52,17 @@ const config: Config = {
         disableInDev: false,
       },
     ],
+    async function myPlugin(context, options) {
+      return {
+        name: "docusaurus-tailwindcss",
+        configurePostCss(postcssOptions) {
+          // Appends TailwindCSS and AutoPrefixer.
+          postcssOptions.plugins.push(require("tailwindcss"));
+          postcssOptions.plugins.push(require("autoprefixer"));
+          return postcssOptions;
+        },
+      };
+    },
   ],
   presets: [
     [
@@ -95,6 +106,7 @@ const config: Config = {
             require.resolve("./src/css/custom.scss"),
             require.resolve("./src/css/doc-overview-page.scss"),
             require.resolve("./src/css/tagsearch.css"),
+            require.resolve("./src/css/globals.css"),
           ],
         },
       } satisfies Preset.Options,

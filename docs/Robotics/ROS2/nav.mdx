@@ -18,6 +18,23 @@ import CostMap from "@site/docs/Robotics/ROS2/assets/costmap.jpg";
 import CostMapDemo from "@site/docs/Robotics/ROS2/assets/demo_costmap.mp4";
 import MultiMap from "@site/docs/Robotics/ROS2/assets/multi.jpg";
 import MultiPath from "@site/docs/Robotics/ROS2/assets/multipath.mp4";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@site/src/components/ui/table";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@site/src/components/ui/carousel";
 
 :::danger
 This has not been proof-read or modified for simpler reading yet.
@@ -25,15 +42,11 @@ This has not been proof-read or modified for simpler reading yet.
 12/23/24
 :::
 
-## Getting Started
+## **Getting Started**
 
 These are my notes from the ROS2 Navigation course available on [The Construct](https://app.theconstruct.ai). As this is a robotics note, you will need physical hardware components to follow along. Before each section though, I will list what is required before starting.
 
-## Map
-
-A map is a representation of the environment that the robot is functioning in. It uses the map to localize and plan trajectories. Maps are implemented in ROS2 via an occupancy grid where in each ccell, specific values represent obstacles.
-
-### Requirements
+### **Requirements**
 
 Before starting, we need a robot with LIDAR and Odometry. We also need to use SLAM for localizing. Available ones are cartographer and SLAM-Toolbox. This note uses cartographer as the learning curve is lower. It is notable that cartographer is no longer maintained, so the better software to use is SLAM-Toolbox.
 
@@ -41,12 +54,20 @@ Cartographer is a system that provides real-time simultaneous localization and m
 
 ![cartographer_2d](https://google-cartographer-ros.readthedocs.io/en/latest/_images/demo_2d.gif)
 
-### Configuring Cartographer
+## **Map**
+
+A map is a representation of the environment that the robot is functioning in. It uses the map to localize and plan trajectories. Maps are implemented in ROS2 via an occupancy grid where in each cell, specific values represent obstacles.
+
+### **Configuring Cartographer**
 
 We use a launch file because we can start multiple nodes and can also set a node-specific parameter while launching a node. These parameters can then be loaded from a YAML file or specified in the launch file.
 
-To launch `cartographer`, we need to launch two nodes:
+To launch `cartographer`, we need to launch two nodes. Below are the files you need within their respective directories.
 
+<Tabs>
+
+<TabItem label="cartographer.launch.py" value="cartographer.launch.py">
+```<package>/launch```
 ```py
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -54,29 +75,28 @@ from ament_index_python.packages import get_package_share_directory
 cartographer_config_dir = os.path.join(get_package_share_directory('cartographer_slam'), 'config')
 
 Node(
-    package='cartographer_ros',
-    executable='cartographer_node',
-    name='cartographer_node',
-    output='screen',
-    parameters=[{'use_sim_time': True}], # boolean indicating node synchronization time with simulation time
-    arguments=['-configuration_directory', cartographer_config_dir,
-               '-configuration_basename', configuration_basename]
-    # configuration_directory specifies where the configuration files are
-    # configuration_basename specifies the configuration file name
-    ),
+package='cartographer_ros',
+executable='cartographer_node',
+name='cartographer_node',
+output='screen',
+parameters=[{'use_sim_time': True}], # boolean indicating node synchronization time with simulation time
+arguments=['-configuration_directory', cartographer_config_dir,
+'-configuration_basename', configuration_basename] # configuration_directory specifies where the configuration files are # configuration_basename specifies the configuration file name
+),
 Node(
-    package='cartographer_ros',
-    executable='cartographer_occupancy_grid_node',
-    output='screen',
-    name='occupancy_grid_node',
-    parameters=[{'use_sim_time': True}],
-    arguments=['-resolution', '0.05', '-publish_period_sec', '1.0']
-    # resolution specifies number of meters per grid in the map
-    # publish_period_sec specifies frequency of publishing to /map topic
-    )
-```
+package='cartographer_ros',
+executable='cartographer_occupancy_grid_node',
+output='screen',
+name='occupancy_grid_node',
+parameters=[{'use_sim_time': True}],
+arguments=['-resolution', '0.05', '-publish_period_sec', '1.0'] # resolution specifies number of meters per grid in the map # publish_period_sec specifies frequency of publishing to /map topic
+)
 
-We then create a LUA file named `cartographer.lua` within the config directory.
+````
+</TabItem>
+
+<TabItem label="cartographer.lua" value="cartographer.lua">
+We then create a LUA file named `cartographer.lua` within the ```<package>/config``` directory.
 
 ```lua
 include "map_builder.lua"
@@ -124,14 +144,21 @@ POSE_GRAPH.constraint_builder.global_localization_min_score = 0.7
 -- POSE_GRAPH.optimize_every_n_nodes = 0
 
 return options
-```
+````
 
+</TabItem>
+
+<TabItem label="config files" value="config files">
 Make sure that within setup.py, we specify the new config and lua directories. If you're using C++, make sure to specify the DIRECTORIES within CMakeList.
+
+#### **setup.py**
 
 ```py
 (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
 (os.path.join('share', package_name, 'config'), glob('config/*')),
 ```
+
+#### **CMakeList**
 
 ```cpp
 install(DIRECTORY
@@ -141,7 +168,12 @@ install(DIRECTORY
 )
 ```
 
-We can then compile the package and launch the launch file. We can then run rviz2 on another terminal while this is running.
+ </TabItem>
+</Tabs>
+
+#### **Compilation**
+
+Compile the package and launch the launch file from the CLI. Once we've done that, run RVIZ2 on another terminal while our cartographer node is running.
 
 To display our mapping, add the `map` display and set the topic to `/map`. If the mapping isn't showing, then the Quality of Service (QoS) parameters of the `/map` may be wrong. We can add a couple more displays.
 
@@ -149,18 +181,25 @@ To display our mapping, add the `map` display and set the topic to `/map`. If th
 - `LaserScan`: Allows us to see the laser coliding with the objects on the map
 
 :::note
-These are all specific to the hardware configurations the construct provides
+These are all specific to the hardware configurations and the topic may be dependent on your system.
 :::
 
-<img src={Map.src} width="100%" />
+<Carousel orientation="horizontal">
+  <CarouselContent>
+    <CarouselItem>
+      <img src={Map.src} width="100%" />
+    </CarouselItem>
+    <CarouselItem>
+      <img src={Mapped.src} width="100%" />
+    </CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>
 
-After moving and mapping around, we'll have our entire domain.
+### **Alternative Configurations**
 
-<img src={Mapped.src} width="100%" />
-
-### Different Configurations
-
-Cartographer works for many robots and sensors but must be configured properly to work optimally. By default, cartographer automatically subscribes to `/scan, /odom, /imu` topics. All configurations can be given from the Lua configuration file.This means that in the launch files, we have to remap those three if we want to publish data to them.
+Cartographer works for many robots and sensors but must be configured properly to work optimally. By default, cartographer automatically subscribes to `/scan, /odom, /imu` topics. All configurations can be given from the Lua configuration file. This means that in the launch files, we have to remap those three if we want to publish data to them.
 
 ```py
 from launch import LaunchDescription
@@ -181,31 +220,194 @@ def generate_launch_description():
     ])
 ```
 
-| **Category**           | **Parameter**                                   | **Description**                                                                                   | **Default**           |
-| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------- |
-| **Frames**             | `map_frame`                                     | ROS frame ID for publishing sub-maps, the parent frame of poses.                                  | `map`                 |
-|                        | `tracking_frame`                                | Frame ID tracked by SLAM. IMU position if used, commonly `base_link` or `base_footprint`.         | `base_link`           |
-|                        | `published_frame`                               | Child frame for publishing poses. If `odom` provided, it publishes pose of `odom` in `map_frame`. | `odom` or `base_link` |
-|                        | `odom_frame`                                    | Frame for publishing local SLAM result if `provide_odom_frame` is true.                           | `odom`                |
-|                        | `provide_odom_frame`                            | Publishes local non-loop-closed pose as `odom_frame` in `map_frame` if enabled.                   | `true`                |
-|                        | `use_odometry`                                  | Subscribes to `nav_msgs/Odometry` on `odom` topic and includes odometry in SLAM.                  | `true`                |
-|                        | `use_nav_sat`                                   | Subscribes to `sensor_msgs/NavSatFix` on `fix` topic and includes navigation data in SLAM.        | `true`                |
-| **Laser Parameters**   | `num_laser_scans`                               | Number of laser scan topics to subscribe to.                                                      | `1`                   |
-|                        | `num_multi_echo_laser_scans`                    | Number of multi-echo laser scan topics to subscribe to.                                           | `0`                   |
-|                        | `num_subdivisions_per_laser_scan`               | Number of point clouds to split each laser scan for unwarping during motion.                      | `1`                   |
-|                        | `num_point_clouds`                              | Number of point cloud topics to subscribe to.                                                     | `1`                   |
-| **Filter Parameters**  | `lookup_transform_timeout_sec`                  | Timeout in seconds for looking up transforms using tf2.                                           | `0.2`                 |
-|                        | `submap_publish_period_sec`                     | Interval in seconds to publish submap poses.                                                      | `0.3`                 |
-|                        | `pose_publish_period_sec`                       | Interval in seconds to publish poses (e.g., 5e-3 for 200 Hz).                                     | `5e-3`                |
-|                        | `trajectory_publish_period_sec`                 | Interval in seconds to publish trajectory markers (e.g., 30e-3 for 30 ms).                        | `30e-3`               |
-|                        | `odometry_sampling_ratio`                       | Sampling ratio for odometry messages.                                                             | `1.0`                 |
-|                        | `fixed_frame_sampling_ratio`                    | Sampling ratio for fixed frame messages.                                                          | `1.0`                 |
-|                        | `imu_sampling_ratio`                            | Sampling ratio for IMU messages.                                                                  | `1.0`                 |
-|                        | `landmarks_sampling_ratio`                      | Sampling ratio for landmark messages.                                                             | `1.0`                 |
-| **Trajectory Builder** | `TRAJECTORY_BUILDER_2D.min_range`               | Minimum distance measured to be considered for mapping.                                           | `0.2`                 |
-|                        | `TRAJECTORY_BUILDER_2D.max_range`               | Maximum distance measured to be considered for mapping.                                           | `30.0`                |
-|                        | `TRAJECTORY_BUILDER_2D.missing_data_ray_length` | Distance to treat as a lost laser ray.                                                            | `25.0`                |
-|                        | `TRAJECTORY_BUILDER_2D.use_imu_data`            | Whether or not to use IMU data.                                                                   | `true`                |
+<Table>
+  <TableCaption>
+    A list of configuration parameters and their details for cartographer
+  </TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead className="w-[150px]">Category</TableHead>
+      <TableHead>Parameter</TableHead>
+      <TableHead>Description</TableHead>
+      <TableHead className="text-right">Default</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell className="font-medium">Frames</TableCell>
+      <TableCell>map_frame</TableCell>
+      <TableCell>
+        ROS frame ID for publishing sub-maps, the parent frame of poses.
+      </TableCell>
+      <TableCell className="text-right">map</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>tracking_frame</TableCell>
+      <TableCell>
+        Frame ID tracked by SLAM. IMU position if used, commonly `base_link` or
+        `base_footprint`.
+      </TableCell>
+      <TableCell className="text-right">base_link</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>published_frame</TableCell>
+      <TableCell>
+        Child frame for publishing poses. If `odom` provided, it publishes pose
+        of `odom` in `map_frame`.
+      </TableCell>
+      <TableCell className="text-right">odom or base_link</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>odom_frame</TableCell>
+      <TableCell>
+        Frame for publishing local SLAM result if `provide_odom_frame` is true.
+      </TableCell>
+      <TableCell className="text-right">odom</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>provide_odom_frame</TableCell>
+      <TableCell>
+        Publishes local non-loop-closed pose as `odom_frame` in `map_frame` if
+        enabled.
+      </TableCell>
+      <TableCell className="text-right">true</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>use_odometry</TableCell>
+      <TableCell>
+        Subscribes to `nav_msgs/Odometry` on `odom` topic and includes odometry
+        in SLAM.
+      </TableCell>
+      <TableCell className="text-right">true</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>use_nav_sat</TableCell>
+      <TableCell>
+        Subscribes to `sensor_msgs/NavSatFix` on `fix` topic and includes
+        navigation data in SLAM.
+      </TableCell>
+      <TableCell className="text-right">true</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell className="font-medium">Laser Parameters</TableCell>
+      <TableCell>num_laser_scans</TableCell>
+      <TableCell>Number of laser scan topics to subscribe to.</TableCell>
+      <TableCell className="text-right">1</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>num_multi_echo_laser_scans</TableCell>
+      <TableCell>
+        Number of multi-echo laser scan topics to subscribe to.
+      </TableCell>
+      <TableCell className="text-right">0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>num_subdivisions_per_laser_scan</TableCell>
+      <TableCell>
+        Number of point clouds to split each laser scan for unwarping during
+        motion.
+      </TableCell>
+      <TableCell className="text-right">1</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>num_point_clouds</TableCell>
+      <TableCell>Number of point cloud topics to subscribe to.</TableCell>
+      <TableCell className="text-right">1</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell className="font-medium">Filter Parameters</TableCell>
+      <TableCell>lookup_transform_timeout_sec</TableCell>
+      <TableCell>
+        Timeout in seconds for looking up transforms using tf2.
+      </TableCell>
+      <TableCell className="text-right">0.2</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>submap_publish_period_sec</TableCell>
+      <TableCell>Interval in seconds to publish submap poses.</TableCell>
+      <TableCell className="text-right">0.3</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>pose_publish_period_sec</TableCell>
+      <TableCell>
+        Interval in seconds to publish poses (e.g., 5e-3 for 200 Hz).
+      </TableCell>
+      <TableCell className="text-right">5e-3</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>trajectory_publish_period_sec</TableCell>
+      <TableCell>
+        Interval in seconds to publish trajectory markers (e.g., 30e-3 for 30
+        ms).
+      </TableCell>
+      <TableCell className="text-right">30e-3</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>odometry_sampling_ratio</TableCell>
+      <TableCell>Sampling ratio for odometry messages.</TableCell>
+      <TableCell className="text-right">1.0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>fixed_frame_sampling_ratio</TableCell>
+      <TableCell>Sampling ratio for fixed frame messages.</TableCell>
+      <TableCell className="text-right">1.0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>imu_sampling_ratio</TableCell>
+      <TableCell>Sampling ratio for IMU messages.</TableCell>
+      <TableCell className="text-right">1.0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>landmarks_sampling_ratio</TableCell>
+      <TableCell>Sampling ratio for landmark messages.</TableCell>
+      <TableCell className="text-right">1.0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell className="font-medium">Trajectory Builder</TableCell>
+      <TableCell>TRAJECTORY_BUILDER_2D.min_range</TableCell>
+      <TableCell>
+        Minimum distance measured to be considered for mapping.
+      </TableCell>
+      <TableCell className="text-right">0.2</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>TRAJECTORY_BUILDER_2D.max_range</TableCell>
+      <TableCell>
+        Maximum distance measured to be considered for mapping.
+      </TableCell>
+      <TableCell className="text-right">30.0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>TRAJECTORY_BUILDER_2D.missing_data_ray_length</TableCell>
+      <TableCell>Distance to treat as a lost laser ray.</TableCell>
+      <TableCell className="text-right">25.0</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell></TableCell>
+      <TableCell>TRAJECTORY_BUILDER_2D.use_imu_data</TableCell>
+      <TableCell>Whether or not to use IMU data.</TableCell>
+      <TableCell className="text-right">true</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
 
 If we want to save the map that we mapped out, we can run an executable named `map_saver` from `nav2_map_server`. It's important that we call this within the directory that we want to save the map in. The cartography has to be running for this to work.
 
@@ -213,9 +415,7 @@ If we want to save the map that we mapped out, we can run an executable named `m
 ros2 run nav2_map_server map_saver_cli -f <name>
 ```
 
-This'll generate two files of type `.pgm and .yaml`. The `.pgm` is an image file of the map as an occupancy grid image. The `.yaml` contains details about the resolution of the map.
-
-Example:
+This'll generate two files of type `.pgm` and `.yaml`. The `.pgm` is an image file of the map as an occupancy grid image. The `.yaml` contains details about the resolution of the map.
 
 ```yaml
 image: turtlebot_area.pgm
@@ -227,9 +427,9 @@ occupied_thresh: 0.65 # Pixels with a value greater than this value will be cons
 free_thresh: 0.25 # Pixels with a value smaller than this will be considered a completely free zone
 ```
 
-### Using Saved Map
+### **Using Saved Map**
 
-If we want to use this saved map, we have to launch `map_server` and `nav2_lifecycle_manager`. We can create a custom launch file for this, but we must specify some parameters.
+If we want to use the saved map, we have to launch `map_server` and `nav2_lifecycle_manager`. We can create a custom launch file for this, but we must specify some parameters.
 
 ```py
 from launch import LaunchDescription
@@ -266,7 +466,7 @@ We can try using our saved map by creating a ROS2 package called map_server, pla
 You must specify your map display durability as Transient Local. Volatile means use incoming data being published as the map source, while transient local allows us to check if we had any cached messages that were published but not received by our subscriber as well as all incoming data.
 :::
 
-## Nav2 Lifecycle Manager
+## **Nav2 Lifecycle Manager**
 
 Navigation nodes are managed nodes meaning that they can be easily controlled to be restarted, paused, or running. They can do so by being at these states:
 
@@ -289,7 +489,7 @@ These nodes have the required overrides of the lifecycle functions:
 - on_shutdown()
 - on_error()
 
-#### Lifecycle Manager
+#### **Lifecycle Manager**
 
 In Nav2, the external agent that helps transition nodes to an active state is called the `nav2_lifecycle_manager`. The lifecycle manager changes the state of the managed nodes to achieve a controlled startup, shutdown, reset, pause, or resume of the navigation stack.
 
@@ -329,7 +529,7 @@ uint8 command
 bool success
 ```
 
-## Localization
+## **Localization**
 
 Localization is knowing the current position with respect to the environment. This means knowing the position and orientation. This is otherwise known as the pose.
 
@@ -341,7 +541,7 @@ That means that the `/odom` frame of the robot knows its relative position to th
 
 When everything is correct, the AMCL publishes that transform.
 
-### ROS2 Localization
+### **ROS2 Localization**
 
 In order to localize, we need three nodes:
 
@@ -351,6 +551,8 @@ In order to localize, we need three nodes:
 
 Let's create an `ament_cmake` package and the launch file for all three nodes.
 
+<Tabs>
+  <TabItem label="localization.launch.py" value="localization.launch.py">
 ```py
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -358,36 +560,39 @@ from launch_ros.actions import Node
 import os
 
 def generate_launch_description():
-    nav2_yaml = os.path.join(get_package_share_directory('localization'), 'config', 'amcl_config.yaml')
-    map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area.yaml')
-    print(map_file)
-    return LaunchDescription([
-        Node(
-            package="nav2_map_server",
-            executable="map_server",
-            name="map_server",
-            output="screen",
-            parameters=[{'use_sim_time': True}, {'yaml_filename': map_file}] ## This is the saved map we got from our cartography.
-            ),
-        Node(
-            package="nav2_amcl",
-            executable="amcl",
-            name="amcl",
-            output="screen",
-            parameters=[nav2_yaml]
-            ),
-        Node(
-            package="nav2_lifecycle_manager",
-Launch Fil            executable="lifecycle_manager",
-            name="lifecycle_manager",
-            output="screen",
-            parameters=[{'use_sim_time': True},
-                        {'autostart': True},
-                        {'node_names': ['map_server', 'amcl']}]
-            )
-        ])
-```
+nav2_yaml = os.path.join(get_package_share_directory('localization'), 'config', 'amcl_config.yaml')
+map_file = os.path.join(get_package_share_directory('map_server'), 'config', 'turtlebot_area.yaml')
+print(map_file)
+return LaunchDescription([
+Node(
+package="nav2_map_server",
+executable="map_server",
+name="map_server",
+output="screen",
+parameters=[{'use_sim_time': True}, {'yaml_filename': map_file}] ## This is the saved map we got from our cartography.
+),
+Node(
+package="nav2_amcl",
+executable="amcl",
+name="amcl",
+output="screen",
+parameters=[nav2_yaml]
+),
+Node(
+package="nav2_lifecycle_manager",
+Launch Fil executable="lifecycle_manager",
+name="lifecycle_manager",
+output="screen",
+parameters=[{'use_sim_time': True},
+{'autostart': True},
+{'node_names': ['map_server', 'amcl']}]
+)
+])
 
+````
+  </TabItem>
+
+  <TabItem label="amcl_config.yaml" value="amcl_config.yaml">
 The amcl_config specifies the configurations for the localization algorithm. This goes inside of the config directory of your package.
 
 ```yaml
@@ -430,18 +635,19 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-```
+````
 
-Make sure to add launch and config files respective to whatever build package you are using.
+  </TabItem>
 
-#### For Python
+  <TabItem label="setup.py/CMakeLists" value="setup.py/CMakeLists">
+#### **For Python**
 
 ```py
 (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
 (os.path.join('share', package_name, 'config'), glob('config/*')),
 ```
 
-#### For C++
+#### **For C++**
 
 ```text
 install(DIRECTORY
@@ -451,6 +657,8 @@ install(DIRECTORY
 )
 ```
 
+  </TabItem>
+</Tabs>
 If all is placed correctly, we should be able to receive our old map. From there onwards, you want to configure your RVIZ settings with these below:
 
 - `map`: Environment
@@ -482,59 +690,270 @@ The Adaptive Monte Carlo Localization algorithm uses particles to localize the r
 
 To get a good localization of our robot, we need to configure out AMCL node from our amcl_config.yaml. Below are the parameters and their respective categories.
 
-#### Overall Filter Parameters
+<Carousel orientation="horizontal">
+  <CarouselContent>
+   <CarouselItem>
+<Table>
+  <TableCaption>AMCL Parameters and Descriptions</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Parameter</TableHead>
+      <TableHead>Type</TableHead>
+      <TableHead>Default</TableHead>
+      <TableHead>Description</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>`min_particles`</TableCell>
+      <TableCell>int</TableCell>
+      <TableCell>500</TableCell>
+      <TableCell>Minimum allowed number of particles.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`max_particles`</TableCell>
+      <TableCell>int</TableCell>
+      <TableCell>2000</TableCell>
+      <TableCell>Maximum allowed number of particles.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`update_min_d`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.25 meters</TableCell>
+      <TableCell>Translational movement required before performing a filter update.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`update_min_a`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2 radians</TableCell>
+      <TableCell>Rotational movement required before performing a filter update.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`resample_interval`</TableCell>
+      <TableCell>int</TableCell>
+      <TableCell>1</TableCell>
+      <TableCell>Number of filter updates required before re-sampling.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`transform_tolerance`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>1.0 seconds</TableCell>
+      <TableCell>Time to post-date the published transform, indicating validity into the future.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`recovery_alpha_slow`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.0 (disabled)</TableCell>
+      <TableCell>
+        Exponential decay rate for the slow average weight filter; helps decide recovery with random poses. Suggested: 0.001.
+      </TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`recovery_alpha_fast`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.0 (disabled)</TableCell>
+      <TableCell>
+        Exponential decay rate for the fast average weight filter; helps decide recovery with random poses. Suggested: 0.1.
+      </TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`set_initial_pose`</TableCell>
+      <TableCell>bool</TableCell>
+      <TableCell>false</TableCell>
+      <TableCell>
+        Causes AMCL to set the initial pose from `initial_pose*` parameters instead of waiting for the `initial_pose` message.
+      </TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`initial_pose`</TableCell>
+      <TableCell>Pose2D</TableCell>
+      <TableCell>{0.0, 0.0, 0.0}</TableCell>
+      <TableCell>X, Y, Z, and yaw coordinates of the robot base frame's initial pose in the global frame.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`always_reset_initial_pose`</TableCell>
+      <TableCell>bool</TableCell>
+      <TableCell>false</TableCell>
+      <TableCell>Requires an initial pose on reset. Uses the last known pose if false.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`save_pose_rate`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.5 Hz</TableCell>
+      <TableCell>
+        Maximum rate at which to save the last estimated pose and covariance to the parameter server. Use -1.0 to disable.
+      </TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+</CarouselItem>
 
-| Parameter                   | Type   | Default         | Description                                                                                                            |
-| --------------------------- | ------ | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `min_particles`             | int    | 500             | Minimum allowed number of particles.                                                                                   |
-| `max_particles`             | int    | 2000            | Maximum allowed number of particles.                                                                                   |
-| `update_min_d`              | double | 0.25 meters     | Translational movement required before performing a filter update.                                                     |
-| `update_min_a`              | double | 0.2 radians     | Rotational movement required before performing a filter update.                                                        |
-| `resample_interval`         | int    | 1               | Number of filter updates required before re-sampling.                                                                  |
-| `transform_tolerance`       | double | 1.0 seconds     | Time to post-date the published transform, indicating validity into the future.                                        |
-| `recovery_alpha_slow`       | double | 0.0 (disabled)  | Exponential decay rate for the slow average weight filter; helps decide recovery with random poses. Suggested: 0.001.  |
-| `recovery_alpha_fast`       | double | 0.0 (disabled)  | Exponential decay rate for the fast average weight filter; helps decide recovery with random poses. Suggested: 0.1.    |
-| `set_initial_pose`          | bool   | false           | Causes AMCL to set the initial pose from `initial_pose*` parameters instead of waiting for the `initial_pose` message. |
-| `initial_pose`              | Pose2D | {0.0, 0.0, 0.0} | X, Y, Z, and yaw coordinates of the robot base frame's initial pose in the global frame.                               |
-| `always_reset_initial_pose` | bool   | false           | Requires an initial pose on reset. Uses the last known pose if false.                                                  |
-| `save_pose_rate`            | double | 0.5 Hz          | Maximum rate at which to save the last estimated pose and covariance to the parameter server. Use -1.0 to disable.     |
+<CarouselItem>
+<Table>
+  <TableCaption>Laser Model Parameters</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Parameter</TableHead>
+      <TableHead>Type</TableHead>
+      <TableHead>Default</TableHead>
+      <TableHead>Description</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>`laser_min_range`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>-1.0</TableCell>
+      <TableCell>Minimum scan range to be considered. Use laser's minimum range if set to -1.0.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`laser_max_range`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>100</TableCell>
+      <TableCell>Maximum scan range to be considered. Use laser's maximum range if set to -1.0.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`max_beams`</TableCell>
+      <TableCell>int</TableCell>
+      <TableCell>60</TableCell>
+      <TableCell>Number of evenly-spaced beams in each scan used when updating the filter.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`z_hit`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.5</TableCell>
+      <TableCell>Mixture weight for `z_hit` part of the model.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`z_short`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.05</TableCell>
+      <TableCell>Mixture weight for the `z_short` part of the model.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`z_max`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.05</TableCell>
+      <TableCell>Mixture weight for the `z_max` part of the model.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`z_rand`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.5</TableCell>
+      <TableCell>Mixture weight for the `z_rand` part of the model.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`sigma_hit`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2 meters</TableCell>
+      <TableCell>Standard deviation for Gaussian model used in `z_hit` part.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`lambda_short`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.1</TableCell>
+      <TableCell>Exponential decay parameter for the `z_short` part of the model.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`laser_likelihood_max_dist`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>2.0 meters</TableCell>
+      <TableCell>Maximum distance for obstacle inflation in the likelihood_field model.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`laser_model_type`</TableCell>
+      <TableCell>string</TableCell>
+      <TableCell>"likelihood_field"</TableCell>
+      <TableCell>
+        Model to use: `beam`, `likelihood_field`, or `likelihood_field_prob` (includes beam skipping).
+      </TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+</CarouselItem>
+<CarouselItem>
+<Table>
+  <TableCaption>Odometry Model Parameters</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Parameter</TableHead>
+      <TableHead>Type</TableHead>
+      <TableHead>Default</TableHead>
+      <TableHead>Description</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>`robot_model_type`</TableCell>
+      <TableCell>string</TableCell>
+      <TableCell>"differential"</TableCell>
+      <TableCell>Type of motion model: `differential` or `omnidirectional`.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`alpha1`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2</TableCell>
+      <TableCell>Noise in odometry's rotation estimate from rotational motion.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`alpha2`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2</TableCell>
+      <TableCell>Noise in odometry's rotation estimate from translational motion.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`alpha3`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2</TableCell>
+      <TableCell>Noise in odometry's translation estimate from translational motion.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`alpha4`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2</TableCell>
+      <TableCell>Noise in odometry's translation estimate from rotational motion.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`alpha5`</TableCell>
+      <TableCell>double</TableCell>
+      <TableCell>0.2</TableCell>
+      <TableCell>Translation-related noise parameter (only for `omni` model).</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`odom_frame_id`</TableCell>
+      <TableCell>string</TableCell>
+      <TableCell>"odom"</TableCell>
+      <TableCell>Frame to use for odometry.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`base_frame_id`</TableCell>
+      <TableCell>string</TableCell>
+      <TableCell>"base_footprint"</TableCell>
+      <TableCell>Frame to use for the robot base.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`global_frame_id`</TableCell>
+      <TableCell>string</TableCell>
+      <TableCell>"map"</TableCell>
+      <TableCell>Name of the coordinate frame published by the localization system.</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>`tf_broadcast`</TableCell>
+      <TableCell>bool</TableCell>
+      <TableCell>true</TableCell>
+      <TableCell>Set to false to prevent AMCL from publishing the transform between global and odometry frames.</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+  </CarouselItem>
+  </CarouselContent>
+  <CarouselPrevious />
+  <CarouselNext />
+</Carousel>
 
-#### Laser Model Parameters
+### **Auto Localization**
 
-| Parameter                   | Type   | Default            | Description                                                                                    |
-| --------------------------- | ------ | ------------------ | ---------------------------------------------------------------------------------------------- |
-| `laser_min_range`           | double | -1.0               | Minimum scan range to be considered. Use laser's minimum range if set to -1.0.                 |
-| `laser_max_range`           | double | 100                | Maximum scan range to be considered. Use laser's maximum range if set to -1.0.                 |
-| `max_beams`                 | int    | 60                 | Number of evenly-spaced beams in each scan used when updating the filter.                      |
-| `z_hit`                     | double | 0.5                | Mixture weight for `z_hit` part of the model.                                                  |
-| `z_short`                   | double | 0.05               | Mixture weight for the `z_short` part of the model.                                            |
-| `z_max`                     | double | 0.05               | Mixture weight for the `z_max` part of the model.                                              |
-| `z_rand`                    | double | 0.5                | Mixture weight for the `z_rand` part of the model.                                             |
-| `sigma_hit`                 | double | 0.2 meters         | Standard deviation for Gaussian model used in `z_hit` part.                                    |
-| `lambda_short`              | double | 0.1                | Exponential decay parameter for the `z_short` part of the model.                               |
-| `laser_likelihood_max_dist` | double | 2.0 meters         | Maximum distance for obstacle inflation in the likelihood_field model.                         |
-| `laser_model_type`          | string | "likelihood_field" | Model to use: `beam`, `likelihood_field`, or `likelihood_field_prob` (includes beam skipping). |
-
-Mixture weights should sum to 1.
-
-#### Odometry Model Parameters
-
-| Parameter          | Type   | Default          | Description                                                                                    |
-| ------------------ | ------ | ---------------- | ---------------------------------------------------------------------------------------------- |
-| `robot_model_type` | string | "differential"   | Type of motion model: `differential` or `omnidirectional`.                                     |
-| `alpha1`           | double | 0.2              | Noise in odometry's rotation estimate from rotational motion.                                  |
-| `alpha2`           | double | 0.2              | Noise in odometry's rotation estimate from translational motion.                               |
-| `alpha3`           | double | 0.2              | Noise in odometry's translation estimate from translational motion.                            |
-| `alpha4`           | double | 0.2              | Noise in odometry's translation estimate from rotational motion.                               |
-| `alpha5`           | double | 0.2              | Translation-related noise parameter (only for `omni` model).                                   |
-| `odom_frame_id`    | string | "odom"           | Frame to use for odometry.                                                                     |
-| `base_frame_id`    | string | "base_footprint" | Frame to use for the robot base.                                                               |
-| `global_frame_id`  | string | "map"            | Name of the coordinate frame published by the localization system.                             |
-| `tf_broadcast`     | bool   | true             | Set to false to prevent AMCL from publishing the transform between global and odometry frames. |
-
-### Auto Localization
-
-#### Via YAML
+#### **Via YAML**
 
 If you don't want to localize via GUI `rviz`, you can do so by modifying the configuration settings for `amcl`. When you start your localization server, you're given the initial_pose, to which you can set those within the `amcl_config`:
 
@@ -548,13 +967,13 @@ initial_pose:
 
 Rebuild the package, and you can start the server and not have to localize the robot.
 
-#### Via CLI
+#### **Via CLI**
 
 ```bash
 ros2 topic pub -1 /initialpose geometry_msgs/msg/PoseWithCovarianceStamped "{header: {stamp: {sec: 0}, frame_id: 'map'}, pose: {pose: {position: {x: 0.2, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}}"
 ```
 
-### Global Localization
+### **Global Localization**
 
 Global localization is when neither the person or robot knows where it is on the map. In order to localize itself, it does global localization:
 
@@ -574,20 +993,20 @@ Call the service and start moving around to localize.
 ros2 service call /reinitialize_global_localization std_srvs/srv/Empty
 ```
 
-## Path Planning
+## **Path Planning**
 
 Path planning is planning a route from Point A to Point B, avoiding obstacles along the way.
 
 In ROS2, to do path planning, we have to launch several nodes. Before we start any path planning, we need to have two nodes which provides the base map and localization:
 
-##### Mapping Environment
+##### **Mapping Environment**
 
 1. `nav2_map_server`: provides the base map as a topic and service
 2. `nav2_amcl`: responsible for localization via Adaptive Monte Carlo Localizer
 
 To do path planning, we need these nodes:
 
-##### Path Planning
+##### **Path Planning**
 
 1. `planner`
 2. `controller`
@@ -595,9 +1014,9 @@ To do path planning, we need these nodes:
 4. `behavior_tree_navigator`
 5. `nav2_lifecycle_manager`
 
-### Planner
-
-The planner is responsible for computing a path from Point A to Point B. It can compute a path as soon as the robot receives a `2D_Goal_Pose` and also has access to a global environment representation and sensor data buffered into it (`Global Costmap`).
+<Tabs>
+  <TabItem label="Planner" value="Planner">
+The planner is responsible for computing a path from Point A to Point B. It can compute a path as soon as the robot receives a `2D_Goal_Pose` and also has access to a global environment representation and sensor data buffered into it ('Global Costmap`).
 
 Currently on Galactic, there is only one Planenr algorithm available in ROS2, the `Nav2Fn_Planner`.
 
@@ -612,7 +1031,7 @@ output='screen',
 parameters=[nav2_yaml] # contains all of the configuration parameters
 ````
 
-##### nav2_yaml
+##### **nav2_yaml**
 
 ```yaml
 planner_server:
@@ -627,8 +1046,9 @@ planner_server:
       allow_unknown: true
 ```
 
-### Controller
+  </TabItem>
 
+  <TabItem label="Controller" value="Controller">
 The controller is responsible for performing reactive path planning from the current position to the maximum range of the sensors. From this data, it builds a trajectory to avoid the obstacles it encounters along the way while trying to follow the path generated by the planner. The controller is the one responsible for generating the wheel's commands.
 
 There are only two planners available in ROS2:
@@ -646,7 +1066,7 @@ output='screen',
 parameters=[controller_yaml] # contains all of the configuration parameters
 ```
 
-##### controller_yaml
+##### **controller_yaml**
 
 ````yaml
 controller_server:
@@ -714,8 +1134,9 @@ controller_server:
       RotateToGoal.lookahead_time: -1.0
 ````
 
-### Navigation Controller
+  </TabItem>
 
+  <TabItem label="Navigation Controller" value="Navigation Controller">
 The navigation controller coordinates between the planner node and the controller node. This node is called the `bt_navigator`. It basically manages these two nodes.
 
 Navigation controller launch file:
@@ -728,7 +1149,7 @@ output='screen',
 parameters=[bt_navigator_yaml]
 ```
 
-##### bt_navigator_yaml
+##### **bt_navigator_yaml**
 
 ```yaml
 bt_navigator:
@@ -789,6 +1210,7 @@ bt_navigator:
 
 :::info
 The behavior of this node is defined by the XML file dubbed `behavior.xml` which contains the behavior tree. This behavior tree includes when to call the path planner, when to call the controller, and when to activate a recovery behavior. More on behavior trees later on in this note.
+:::
 
 behavior.xml
 
@@ -823,10 +1245,9 @@ behavior.xml
 </root>
 ```
 
-:::
+  </TabItem>
 
-### Recoveries Server
-
+  <TabItem label="Recoveries Server" value="Recoveries Server">
 When a robot cannot find a valid path to the goal provided or gets stuck in the middle, we use recovery behaviors provided by recovery servers. These are simple predefined movements called via behavior trees. When the robot gets stuck, the `bt_navigator` will call the `recoverieS_server`.
 
 To Launch Recovery Servers:
@@ -848,7 +1269,7 @@ There are three recovery behaviors available in the Nav2 stack:
 
 We can indicate which one of these behaviors we want to load within the config file `recovery_yaml`.
 
-##### recovery_yaml
+##### **recovery_yaml**
 
 ```yaml
 behavior_server:
@@ -873,7 +1294,9 @@ behavior_server:
     rotational_acc_lim: 3.2
 ```
 
-### Demo
+  </TabItem>
+</Tabs>
+### **Demo**
 
 We'll start by first creating a new package using our favorite CMake build system. We'll then create two directories: `config` and `launch`.
 
@@ -1142,7 +1565,7 @@ behavior_server:
 We have to be running in parallel our localization server, the one responsible for localizing our robot with the map and the one providing the base map environment.
 :::
 
-#### RVIZ2 Settings
+#### **RVIZ2 Settings**
 
 On top of our settings provided for localization, we add the `Path` display and change LineStyle to `BillBoards`. If everything is set, we can get something cool like below!
 
@@ -1155,24 +1578,24 @@ On top of our settings provided for localization, we add the `Path` display and 
 
 </video>
 
-#### Navigation Goal via CLI
+#### **Navigation Goal via CLI**
 
 We can send a goal via the CLI through the server interface `/navigate_to_pose` or `goal_pose`.
 
-##### Action
-
+<Tabs>
+  <TabItem label="Action" value="Action">
 ```bash
 ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "pose: {header: {frame_id: map}, pose: {position: {x: 1.52, y: 1.92, z: 0.0}, orientation:{x: 0.0, y: 0.0, z: 0, w: 1.0000000}}}"
 ```
+  </TabItem>
 
-##### Topic
-
+  <TabItem label="Topic" value="Topic">
 ```bash
 ros2 topic pub -1 /goal_pose geometry_msgs/PoseStamped "{header: {stamp: {sec: 0}, frame_id: 'map'}, pose: {position: {x: 2.2, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}"
 ```
+  </TabItem>
 
-#### ROS2 Node
-
+  <TabItem label="ROS2 Node" value="ROS2 Node">
 Taken directly from The Construct.
 
 ```py
@@ -1246,11 +1669,13 @@ if __name__ == '__main__':
 
 Used via RVIZ and `Publish Point` feature.
 
-## Obstacle Avoidance
+  </TabItem>
+</Tabs>
+## **Obstacle Avoidance**
 
 The Nav2 stack avoids dynamic and static obstacles by utilizing what's known as costmaps.
 
-### Costmaps
+### **Costmaps**
 
 A Costmap is a 2D representation of robot-sensed obstacles on a grid map. Each grid cells contain information about the obstacles detected by the sensors. The cost of the cell can be unknown, free, occupied, or inflated. Different colors indicate how likely it is to colide against an obstacle. Using this information, the Nav2 stack can compute their tasks safely and efficiently.
 
@@ -1261,7 +1686,7 @@ There are two kinds of costmaps: `global` and `local`.
 
 <img src={CostMap.src} width="100%" />
 
-### Global Costmaps
+### **Global Costmaps**
 
 To add a `global costmap`, we can add these parameters to the `planner.yaml` file.
 
@@ -1294,7 +1719,7 @@ When we run our `path_planner_server` with these new parameters, we see an added
 The different tones of gray are to illustrate the different regions the robot can use. Dark tones of grey means the robot cannot use that area to path plan as it is too close to an obstacle
 :::
 
-#### Global Costmap Obstacle Layers
+#### **Global Costmap Obstacle Layers**
 
 Global costmaps are generated as the superposition of different obstacle layers. This means that each layer adds a set of obstacles to the `global costmap` based on how the layer computes the obstacles.
 
@@ -1313,7 +1738,7 @@ plugins: ["static_layer", "obstacle_layer", "inflation_layer", "voxel_layer"] # 
 
 Adding these layers will allow us to account for dynamic obstacles.
 
-#### General Parameters
+#### **General Parameters**
 
 <Tabs>
   <TabItem value="global_costmap" label="global_costmap">
@@ -1386,7 +1811,7 @@ voxel_layer:
   </TabItem>
 </Tabs>
 
-### Local Costmap
+### **Local Costmap**
 
 Let's figure out how to add a `local costmap`. It's no different than a `global costmap` but goes inside of `controller.yaml` instead of `planner.yaml`. This is because a `local costmap` is a dynamic version of the `global costmap` using sensors.
 
@@ -1451,11 +1876,11 @@ We also have to change the `controller.yaml` configuration:
 Remember that we can only specify one parameter: `footprint` or `robot_radius`.
 :::
 
-### Demo
+### **Demo**
 
 <video width="100%" controls src={CostMapDemo} title="Demo Video"></video>
 
-### Path Planner Package
+### **Path Planner Package**
 
 Currently, we have two packages: `localization` and `path_planner`. One does the localization and mapping while the other does the path planning. Ideally, for a full navigaiton system, we want a single package with one `nav2_lifecycle_manager` managing all navigation nodes.
 
@@ -1536,7 +1961,7 @@ def generate_launch_description():
     ])
 ```
 
-## Multi-robot Navigation
+## **Multi-robot Navigation**
 
 In the scenario you have multiple robots, each robot will have the same `/cmd_vel` topic name, same `base_footprint` frame name and even the same control node name. This is complicated because the navigation stack won't know which robot it's talking to. We can bypass this by using `namespaces` which are labels we assign to each robot. This means that each robot may have the same name but will have a unique `namespace` for it. `namespaces` are configured at:
 
@@ -1566,7 +1991,7 @@ If these are not configured properly, the robots will have difficulty booting in
 /tf_static
 ```
 
-### Configuration
+### **Configuration**
 
 To have a multiagent system that uses the same nav stack, we need for each robot:
 
@@ -1577,7 +2002,7 @@ To have a multiagent system that uses the same nav stack, we need for each robot
 
 The only thing that'll be used by all is the `map_server` as all robots will use the same map.
 
-### Mapping
+### **Mapping**
 
 It is possible to have multiple robots collaborate to create a single map between them but that is covered later on. This tutorial goes over:
 
@@ -1585,7 +2010,7 @@ It is possible to have multiple robots collaborate to create a single map betwee
 2. A single `map_server` is launched using that map
 3. All the navigation systems for each robot will use the same name by asking for the same `map_server`
 
-#### Multirobot cartographer
+#### **Multirobot cartographer**
 
 There isn't much difference when trying to do multirobot navigation. For mapping, al lwe do is add and modify a few lines of code. For this, we use our cartographer config files and simply add these few lines of code below.
 
@@ -1612,7 +2037,7 @@ odom_frame = "tb3_0/odom"
 When localizing with one single robot as above and having the other stand still, the map will think the idle robot is an obstacle.
 :::
 
-### Localization
+### **Localization**
 
 We can launch a localization system for each robot. This means launching two `amcl` nodes each configured for their respective robot.
 
@@ -1804,7 +2229,7 @@ def generate_launch_description():
 
 </Tabs>
 
-#### Configuring RVIZ2
+#### **Configuring RVIZ2**
 
 - Load the RVIZ configuration of the localization unit: `.rviz`
 - Modify the topic of the `LaserScan` to point to the `tb3_0/scan` and indicate the `Color Transformer` as `FlatColor`.
@@ -1822,7 +2247,7 @@ After, we should get something like this:
 <img src={MultiMap.src} width="100%" />
 <img src="https://s3.eu-west-1.amazonaws.com/notebooks.ws/ros2-navigation-humble-148/images/global_tf_localized.png" />
 
-### Path Planning
+### **Path Planning**
 
 To path plan for multiple robots, we need n path planning node systems. This means for our two robot, we need:
 
@@ -2266,7 +2691,7 @@ def generate_launch_description():
 The order is localization -> path_planning -> rviz2 for launches.
 :::
 
-### Configuring RVIZ2
+### **Configuring RVIZ2**
 - Add a ```Path``` display configured for the ```/tb3_0/plan``` topic and select the ```Line Style``` as ```Billboards``` with Red as it's color.
 - Add another ```Path``` for the ```/tb3_1/plan``` and choose a different color for it.
 - Add a ```Map``` display and configure the topic for the global costmap: ```/tb3_0/global_costmap/costmap```
@@ -2275,7 +2700,7 @@ The order is localization -> path_planning -> rviz2 for launches.
 - All the ```cost_maps``` change the color scheme from ```map``` to ```cost_map``` to see the nice colors.
 - To make the robot move, use the ```Tool Properties``` and change the ```2D Goal Pose``` to be ```/tb3_0/goal_pose``` and then use the ```2D Goal Pose```. For the other robot, use the other namespace ```/tb3_1/goal_pose```.
 
-### Single Launch
+### **Single Launch**
 To make this simpler, we can create several launch files to concentrate everything into a single launch. Inside of our ```path_planner_server```, we can create the launch ```multi_main.launch.xml```. Inside the ```cartographer_slam```, we also create the launch file ```start_rviz.launch.py``` which'll launch ```RVIZ2``` without terminal commands. Both of these files should be inside of the ```launch``` directory.
 
 <Tabs>

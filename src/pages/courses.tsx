@@ -185,7 +185,6 @@ export default function Courses(): JSX.Element {
   return (
     <Layout title={title}>
       <main className="container container--fluid margin-vert--lg">
-        <h1>Courses</h1>
         {/* Ensure we're rendering in sorted order by converting to array first */}
         {Object.entries(groupedCourses)
           .sort(([termA], [termB]) => parseInt(termB) - parseInt(termA))
