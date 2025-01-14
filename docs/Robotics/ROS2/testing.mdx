@@ -8,10 +8,25 @@ last_update:
   author: Kevin Shin
 ---
 
+import { Terminal } from "lucide-react";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@site/src/components/ui/table";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@site/src/components/ui/alert";
 
-## Getting Started
+## **Getting Started**
 
 These notes are from [The Construct](https://app.theconstruct.ai) and was originally for ROS. Since they didn't have a couse on testing with ROS2, I referenced the ROS2 documentation and ChatGPT while doing this to fill in the gaps for ROS2 Testing. I used the docker image `osrf/ros:humble-desktop` for my environment.
 
@@ -21,24 +36,72 @@ This note will go over:
 - Node Level Tests
 - Integration Tests
 
-## Testing Frameworks for ROS2
+## **Tests and Frameworks**
 
-| Testing Framework    | Language   | Purpose                                                    |
-| -------------------- | ---------- | ---------------------------------------------------------- |
-| **Google Test**      | C++        | Unit testing with Google Test                              |
-| **pytest**           | Python     | Unit testing for Python-based ROS 2 nodes and library code |
-| **launch_testing**   | Python/C++ | Testing ROS 2 launch files                                 |
-| **mock, unittest**   | Python     | Unit testing with mock and unittest                        |
-| **ros2-benchmarks**  | C++/Python | Performance testing in ROS 2                               |
-| **Cucumber, Behave** | Python     | Behavior-driven testing (BDD)                              |
+<Table>
+  <TableCaption>Testing Frameworks and Their Purposes</TableCaption>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Testing Framework</TableHead>
+      <TableHead>Language</TableHead>
+      <TableHead>Purpose</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>
+        <strong>Google Test</strong>
+      </TableCell>
+      <TableCell>C++</TableCell>
+      <TableCell>Unit testing with Google Test</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>
+        <strong>pytest</strong>
+      </TableCell>
+      <TableCell>Python</TableCell>
+      <TableCell>
+        Unit testing for Python-based ROS 2 nodes and library code
+      </TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>
+        <strong>launch_testing</strong>
+      </TableCell>
+      <TableCell>Python/C++</TableCell>
+      <TableCell>Testing ROS 2 launch files</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>
+        <strong>mock, unittest</strong>
+      </TableCell>
+      <TableCell>Python</TableCell>
+      <TableCell>Unit testing with mock and unittest</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>
+        <strong>ros2-benchmarks</strong>
+      </TableCell>
+      <TableCell>C++/Python</TableCell>
+      <TableCell>Performance testing in ROS 2</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>
+        <strong>Cucumber, Behave</strong>
+      </TableCell>
+      <TableCell>Python</TableCell>
+      <TableCell>Behavior-driven testing (BDD)</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
 
 I did not do any testing with gtest as of `12/25/24` and this was done using `unittest`.
 
-### Unit Tests
+### **Unit Tests**
 
 Unit tests are mainly to ensure correct functionality of a stand-alone unit or function. This means that they could test a single function, node, or process. Library unit tests are for testing non-ROS2 related issues while ROS2 unit tests are for ROS2 single nodes.
 
-### Integration Tests
+### **Integration Tests**
 
 Integration tests are to ensure correct functionality of the system as a whole. For ROS2, it means starting up multiple nodes and ensuring that they all work as intended.
 
@@ -130,16 +193,16 @@ if __name__ == '__main__':
     main()
 ```
 
-:::note
+:::info
 All tests must be within `test` directory and must start as `test_*.py` conventionally.
 :::
 
-## Library Unit Tests
-
-### unittest
+## **Library Unit Tests**
 
 Let's go ahead and create a simple unit test to see if our `RobotControl` is behaving as correctly.
 
+<Tabs>
+  <TabItem label="test_robot_control.py" value="test_robot_control">
 ```py
 #!/usr/bin/env python3
 
@@ -173,21 +236,24 @@ class TestRobotControl(unittest.TestCase):
         self.assertAlmostEqual(speed, 1.0472, places=4, msg="Speed conversion failed")
         self.assertAlmostEqual(angle, 1.57, places=2, msg="Angle conversion failed")
 
-if __name__ == '__main__':
-    unittest.main()
-```
+if **name** == '**main**':
+unittest.main()
 
+````
+  </TabItem>
+
+  <TabItem label="CMakeLists" value="CMakeLists">
 ROS2 has a built-in testing system using it's build system `colcon`, however, to set it up, we have to configure some files. As a general rule of thumb, while ROS2 `ament_python` is available as a build type, it's in your best interest to work with `ament_cmake` as most ROS2 features require a `CMakeLists.txt`.
-
-#### CMakeList
-
 ```txt
 if(BUILD_TESTING)
     find_package(ament_cmake_pytest REQUIRED)
     ament_add_pytest_test(test_robot_control test/test_robot_control.py)
 endif()
-```
+````
 
+  </TabItem>
+
+  <TabItem label="package.xml/setup.py" value="package.xml/setup.py">
 #### package.xml
 
 ```txt
@@ -202,6 +268,10 @@ This is only if you are using an `ament_python` package, and is to provide the R
 (os.path.join('share', package_name, 'test'), glob('test/*.py'))
 ```
 
+  </TabItem>
+</Tabs>
+
+:::info
 If you don't want to utilize the `colcon` build system, you can run the python file as a stand-alone script.
 
 ```bash
@@ -209,6 +279,8 @@ python3 test_robot_control.py # Run without ROS2 environment
 colcon test --packages-select <package_name> # Run with ROS2 environment
 colcon test-result --all --verbose # Run to see results
 ```
+
+:::
 
 The outputs for success and failing:
 
@@ -236,7 +308,7 @@ root@9f3977f822c1:/ros2_ws# colcon test-result --verbose
 Summary: 1 test, 0 errors, 0 failures, 0 skipped
 ```
 
-#### Test Suites
+### **Test Suites**
 
 `unittest` provides what's known as a Test Suite which allows us to modularize our test cases for different functionalities. Test Suites contain test cases or even other test suites.
 
@@ -343,7 +415,7 @@ test/test_robot_control_cases.py::TestCaseB::test_case_string PASSED     [100%]
 Finished <<< robot_control_py [0.63s]                                                                                                                                                                       Summary: 1 package finished [0.83s]
 ```
 
-## Node Tests
+## **Node Tests**
 
 Let's do some Node Testing, which is just unit test for ROS2 nodes.
 
@@ -434,26 +506,33 @@ Finished <<< robot_control_py [0.67s]
 Summary: 1 package finished [0.89s]
 ```
 
-#### Automation
+### **Automation**
 
 There's actually a way simpler way where we just modify the CMakeLists and package.xml, and remove all the unnecessary stuff from main. From the ROS2 documentation,
 
+<Tabs>
+  <TabItem label="CMakeLists" value="CMakeLists">
 ```txt
 cmake_minimum_required(VERSION 3.8)
 project(app)
 
 if(BUILD_TESTING)
-  # Integration tests
-  find_package(ament_cmake_ros REQUIRED)
-  find_package(launch_testing_ament_cmake REQUIRED)
-  function(add_ros_isolated_launch_test path)
-    set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
-    add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
-  endfunction()
-  add_ros_isolated_launch_test(test/<any_test>.py)
-endif()
-```
 
+# Integration tests
+
+find_package(ament_cmake_ros REQUIRED)
+find_package(launch_testing_ament_cmake REQUIRED)
+function(add_ros_isolated_launch_test path)
+set(RUNNER "${ament_cmake_ros_DIR}/run_test_isolated.py")
+    add_launch_test("${path}" RUNNER "${RUNNER}" ${ARGN})
+endfunction()
+add_ros_isolated_launch_test(test/<any_test>.py)
+endif()
+
+````
+  </TabItem>
+
+  <TabItem label="package.xml" value="package.xml">
 ```xml
 <test_depend>ament_cmake_ros</test_depend>
 <test_depend>launch</test_depend>
@@ -461,10 +540,22 @@ endif()
 <test_depend>launch_testing</test_depend>
 <test_depend>launch_testing_ament_cmake</test_depend>
 <test_depend>rclpy</test_depend>
-```
+````
+
+  </TabItem>
+</Tabs>
 
 And you can just run `colcon test` to get your tests. I came upon this after attempting to figure out how to create launch files for testing.
 
-## Integration Tests
+## **Integration Tests**
 
 We can use the same CMake file for configuring an integration test as it was built for that purpose. The `add_ros_isolated_launch_test` isolates the nodes in order to test them. In fact, as long as our CMake file contains those lines of code, we don't have to worry about tests as long as all of our tests are in the test directory and starts with `test_*.py`
+
+<Alert>
+  <Terminal className="h-4 w-4" />
+  <AlertTitle>Just gonna put this here...</AlertTitle>
+  <AlertDescription>
+    To be frank, there wasn't much in this note. Maybe when I have time, I'll
+    use gtest with ROS2 for a more robust framework.
+  </AlertDescription>
+</Alert>
