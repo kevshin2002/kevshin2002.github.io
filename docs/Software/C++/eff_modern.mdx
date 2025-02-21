@@ -1,0 +1,167 @@
+---
+id: eff_modern_cpp
+title: Effective Modern C++
+hide_title: true
+sidebar_position: 1
+last_update:
+  date: 2/18/2025
+  author: Kevin Shin
+---
+
+## **Preface**
+
+The note is based off of Scott Meyers famous book titled "Effective Modern C++". In it, he details the workings of C+11 and C+14 and how to become a better software engineer.
+
+## **Deducing Types**
+
+In C++98, there was a single set of rules for type deduction which was for function templates. In C++11, those rules were modified and extended: one for `auto`, and another for `decltype`. C++14 extended the usage for `auto` and `decltype`. I am guilty of using the keyword `auto` frequently without realizing the underlying implementation that makes it possible. This is because it minimizes having to type out the type constantly as changing the type at initialization can propagate throughout the program. Despite that, the types deduced by the compiler via the usage `auto` may not be as what we want it to be.
+
+As such, the only way to be effective at using `auto` is to understand how it works. This section explains template type deduction, building `auto` on top of it, and the tangent of `decltype`. Scott also explains how we can force compilers to make the results of their type deduction visible, and allows us to guarantee that the compilers are deducing the types we want them to be deducing.
+
+### **Understanding template type deduction**
+
+C++ developers are guilty of using templates without knowing how it works. The reality is that the rules for template type deduction are employed by the `auto` keyword. A function template looks like this:
+
+```cpp
+template <typename T>
+void f(ParamType param);
+
+f(expr); // Function call
+```
+During compilation, compilers will use ```expr``` to deduce the types of ```T``` and ```ParamType```.The reason why we deduce both types is that ```ParamType``` contains adornments such as the usage of ```const``` or ```reference qualifiers```. If we instead modified the function to this below:
+
+```cpp
+template<typename T>
+void f(const T& param);
+
+int x = 0;
+f(x) // Type deduced for param will be const int& even though we send in an int, but T will be an int.
+```
+
+It's also expected that most would assume ```T``` deduction will always be the same type as the argument passed to the function, but that's not always the case. The type deduced for T is dependent not just on the type of expression passed in, but also on the form of ```ParamType``` as we saw. 
+
+There are three cases:
+1. ```ParamType``` is a pointer or reference type but not a universal reference. This is not the same as lvalue or rvalue references.
+2. ```ParamType``` is a universal reference.
+3. ```ParamType``` is neither a pointer nor a reference.
+
+#### **Case 1: **ParamType** is a Reference or Pointer, but not a Universal Reference**
+If **ParamType** is a reference or pointer type, *but* not a universal reference, then type deduction works as follows:
+1. If the expression is a reference, ignore the reference part.
+2. Pattern-match the expression's type against **ParamType** to determine T.
+
+```cpp
+template <typename T>
+void f(T& param); // reference
+
+int x = 27; // int
+const int cx = x; // const int
+const int& rx = x; // reference const int
+
+f(x) // T is int, param is int&
+f(cx) // T is const int, param is const int&
+f(rx) // T is const int, param is const int&
+```
+Note the second and third function calls. They both remain **const** even though the parameter is of reference type. This means that passing in a **const** object to a reference parameter is safe as the **constness** of an object comes part of the type deduced for T. 
+
+These examples use lvalue references, but type deduction works exactly the same way for rvalue references. The only difference is that the parameters has to be rvalue references and this has nothing to do with type deduction protocol.
+
+```cpp
+template <typename T>
+void f(const T& param); // reference to const
+
+int x = 27;
+const int cx = x;
+const int& rx = x;
+
+f(x); // T is int, param is const int&
+f(cx); // T is int, param is const int&
+f(rx); // T is int, param is const int&
+```
+
+We drop the **constness** on T because our parameter is now a reference to **const** and no longer a need for T to have **const**. Note that if we dropped the const term, it would implictly enforce **constness** but explictly stating that the parameter is **const** does the same thing, except now param is always a reference to const. 
+
+Pointer case is the exact same, but instead of a reference, we have a pointer.
+```cpp
+template<typename T>
+void f(T* param);
+
+int x = 27;
+const int *px = x;
+f(&x); // T is int, param is int*
+f(px); // T is const int, param is const int*
+```
+#### **Case 2: **ParamType** is a Universal Reference**
+A universal reference declared type is **T&&** and can take both lvalue references and rvalue references. What kind of reference changes inside of the function scope though once passed in.
+
+1. If expression is an lvalue, both **T** and **ParamType** are deduced to be lvalue references. This is notable as it's the only situation in template type deduction where T is deduced to be a reference. **ParamType** is also declared as an rvalue reference but its deduced type is an lvalue reference.
+2. If expression is an rvalue, the normal rules apply.
+
+```cpp
+template <typename T>
+void f(T&& param); // universal reference
+
+int x = 27;
+const int cx = x;
+const int& rx = x;
+
+f(x); // x is lvalue, T is int&, param is int&
+f(cx); // x is lvalue, T is const int&, param is const int&
+f(rx); // x is lvalue, t is const int&, param is const int&
+f(27); // 27 is rvalue, T is int, param is int&&
+```
+#### **Case 3: **ParamType** is neither a pointer nor a reference**
+We're sending pass by value or a copy now. The behavior is:
+1. If expression is a reference, ignore the reference part.
+2. If expression is const, ignore it too. If it's volatile, ignore it too.
+
+```cpp
+template <typename T>
+void f(T param); // pass by value
+
+int x = 27;
+const int cx = x;
+const int& rx = x;
+
+f(x) // T and param are both int
+f(cx) // T and param are both int
+f(rx) // T and param are both int
+```
+
+The reason why param isn't const even though cx and rx are is because param is an entirely new copy of cx and rx. Just because the original is const doesn't mean the copy can't be. It's important that const and volatile is ignored only for pass by value parameters. For parameters that are references to or pointers to const, the constness is preserved during type deduction. 
+
+Special case where expression is a const pointer to a const object, and expression is a pass by value.
+
+```cpp
+template<typename T>
+void f(T param);
+
+const char* const ptr = "Fun with pointers" // left const states the strings are const, right const means the ptr can't be changed.
+
+f(ptr); // T is const char*
+```
+
+When calling the function, the pointer will be copied into param, so the pointer itself is pass by value. The constness of the ptr will thus be ignored and the type deduced for param will be const char*, a modifiable pointer to a const character string. The constness of what ptr points to is preserved during type deduction but the constness of ptr is ignored as we're creating a new copy into a new pointer, param.
+
+#### **Array Arguments**
+This is pretty much it for mainstream template type deduction but there's a niche case involving array types. Many will think array types and pointer types seem interchangeable but the primary contributor is that in many contexts, an array decays into a pointer to its first element. This is what allows code like this to compile:
+
+```cpp
+const char name[] = "J, P, Briggs"; // name type is const char[13]
+const char* ptrToName = name; // array decays to pointer
+```
+
+These two types are not the same. One is a const char* and the other is a const char[13], but since we have array-to-pointer decay rule, the code compiles. What if an array is passed to a template taking a by-value parameter?
+
+```cpp
+template<typename T>
+void f(T param); // template with pass by-value parameter
+f(name) // What would T and param types be?
+```
+
+Note that these two are perfectly the same:
+```cpp
+void myFunc(int param[]);
+void myFunc(int* param);
+```
+This equivalence of array and pointer parameters is a bit of foliage springing from the C roots at the base of C++ and it gives the illusion that array and pointer types are the same. This means that since array parameter declarations are treated as if they're pointer parameters, the type of an array that's passed to the template function by value is deduced to be a pointer type, which defaults to case 2. This means that the parameter T is deduced to be const char*.

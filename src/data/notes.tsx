@@ -43,7 +43,7 @@ export type TagType =
   | "mathematics"
   | "science"
   | "misc"
-  | "implementation"
+  | "project"
   | "insight"
   | "paper-reading"
   | "proof-of-concept"
@@ -56,8 +56,7 @@ export type TagType =
   | "C++"
   | "Python"
   | "Rust"
-  | "C"
-  | "MATLAB";
+  | "C";
 
 const Notes: Note[] = [
   {
@@ -65,21 +64,21 @@ const Notes: Note[] = [
     description: "Understand how ROS2 works in C++, Python, and Rust",
     preview: require("./images/ros2.png"),
     website: "./Robotics/ROS2",
-    tags: ["cpp", "python", "rust", "robotics", "pinned"],
+    tags: ["cpp", "python", "rust", "robotics"],
   },
   {
     title: "ROS2 Nav2",
     description: "Understand how the ROS2 navigation framework (Nav2) works",
     preview: require("./images/nav2.png"),
     website: "./Robotics/ROS2/nav2",
-    tags: ["cpp", "python", "robotics", "pinned"],
+    tags: ["cpp", "python", "robotics"],
   },
   {
     title: "Effective Modern C++",
     description: "Wisdom from Scott Meyers for C+11 and C++14",
     preview: require("./images/eff_modern.jpg"),
     website: "./Software/C++/Books/eff_modern_cpp",
-    tags: ["cpp", "computer-science"],
+    tags: ["cpp", "computer-science", "pinned"],
   },
   {
     title: "ROS2 Testing",
@@ -87,7 +86,7 @@ const Notes: Note[] = [
       "Learn how to test ROS2 with unit and integration testing via pytest/gtest",
     preview: require("./images/ros2_test.jpg"),
     website: "./Robotics/ROS2/testing-ros2",
-    tags: ["cpp", "python", "robotics", "pinned"],
+    tags: ["cpp", "python", "robotics"],
   },
   {
     title: "URDF",
@@ -109,7 +108,7 @@ const Notes: Note[] = [
     description: "Understand how to use ROS2 and computer vision for robotics",
     preview: require("./images/perception.png"),
     website: "./Robotics/ROS2/perception",
-    tags: ["cpp", "robotics", "machine_learning", "pinned"],
+    tags: ["cpp", "robotics", "machine_learning"],
   },
 ];
 
@@ -190,11 +189,11 @@ export const Tags: { [type in TagType]: Tag } = {
     color: "#C084FC",
   },
 
-  implementation: {
-    label: translate({ message: "Implementation" }),
+  project: {
+    label: translate({ message: "Project" }),
     description: translate({
       message: "We only know what we make.",
-      id: "tagsearch.tag.implementation.description",
+      id: "tagsearch.tag.project.description",
     }),
     color: "#4F46E5",
   },
