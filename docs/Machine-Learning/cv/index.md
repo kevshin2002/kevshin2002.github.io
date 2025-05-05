@@ -1,11 +1,13 @@
 ---
-id: Machine-learning
-title: Machine Learning
+id: Computer-Vision
+title: Computer Vision
 hide_title: true
 hide_table_of_contents: true
-sidebar_position: 3
+sidebar_position: 1
 last_update:
-  date: 12/17/2024
+  date: 2/22/2025
   author: Kevin Shin
 unlisted: true
 ---
+
+

@@ -1,0 +1,44 @@
+---
+id: ece285
+title: ECE 285 @ UCSD
+hide_title: true
+---
+
+:::info
+This note was taken while taking ECE 285 @ UCSD for Spring 2025.
+:::
+
+# **Introduction to Visual Learning**
+
+
+Traditional Computer Vision Pipeline
+
+Image => Extract multiple types of features and combine => train a linear classifier => scores for each class.
+
+Neural networks
+Learn the features automatically instead of designing manually.
+Learn the features and the classifier end to end together
+Using multiple layers.
+
+Mutlilayer Perceptrons
+Linear Classifier: f(x) = Wx
+2 layer Neural Network f(x) = W_2 activation (W1x)
+
+
+Why Non lienarity between W1 and W2?
+
+Without activation function, we can have a simple W = W2 W1 instead of two sets of weights. Reduces to a linear classifier. We basically remove the power of "hidden" features and we don't allow the neural network to learn and store these hidden features. It all condenses to one matrix. We want these hidden features cause it allows us to store more depth info and cascade that information. It increases representation power and this is what why we track parameters in neural networks. more = better but also more complexity and more training = more compute = more storage (TRADEOFFS).
+
+You can visualize each layer's weights or "templates". These are basically features it learns across all the classes. Each layer is an MLP and the dense layer is just a linear classifier.
+
+Gradient vanishing = deep networks with gradients constantly applied since outputs are between 0 and 1, so it becomes very little once it reaches the first layer.
+
+Back propagation is nice because it lets us break the layers into individual gradients adn chain them. For a simple layer, we can directly optimize taking wrt the first layer, but for very DEEP layers, it's hard to do so, so we can just individually find each layers gradient and multiply them all together. The middle layers are the hidden layers wrt to the previous hidden layer.
+
+So it's wrt to last layer chained upwards to the first layer. Every layer MUST be differentiable though for this to happen.
+
+Relu gradient:
+1 if >0
+0 if < 0
+
+When computing backpropagation, we do it dynamically programming method. We are basically sending the partials backwards through each layer, and we can use it to get the gradient wrt the first layer. This is why it's called propagating. So at each layer, we compute the error wrt to the layer and the layer wrt to the weights.

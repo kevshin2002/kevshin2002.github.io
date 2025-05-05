@@ -160,10 +160,8 @@ const config: Config = {
         srcDark: "img/logo.png",
       },
       items: [
-        { to: "/courses", label: "Courses", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         { to: "/docs/note", label: "Notes", position: "left" },
-        { to: "/projects", label: "Projects", position: "left" },
       ],
     },
     footer: {
@@ -206,12 +204,12 @@ const config: Config = {
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Kevin Shin. All rights reserved.`,
     },
-    algolia: {
+    /*algolia: {
       appId: process.env.ALGOLIA_APP_ID,
       apiKey: process.env.ALGOLIA_API_KEY,
       indexName: process.env.ALGOLIA_INDEX_KEY,
       contextualSearch: true,
-    },
+    },*/
     themes: [
       require.resolve("@docusaurus/theme-live-codeblock"),
       require.resolve("@docusaurus/theme-search-algolia"),

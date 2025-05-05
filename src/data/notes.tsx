@@ -45,7 +45,7 @@ export type TagType =
   | "misc"
   | "project"
   | "insight"
-  | "paper-reading"
+  | "research"
   | "proof-of-concept"
   | "analysis"
   | "Embedded"
@@ -77,8 +77,8 @@ const Notes: Note[] = [
     title: "Effective Modern C++",
     description: "Wisdom from Scott Meyers for C+11 and C++14",
     preview: require("./images/eff_modern.jpg"),
-    website: "./Software/C++/Books/eff_modern_cpp",
-    tags: ["cpp", "computer-science", "pinned"],
+    website: "./Software/C++/eff_modern_cpp",
+    tags: ["cpp", "computer-science"],
   },
   {
     title: "ROS2 Testing",
@@ -110,6 +110,72 @@ const Notes: Note[] = [
     website: "./Robotics/ROS2/perception",
     tags: ["cpp", "robotics", "machine_learning"],
   },
+// Papers
+  {
+    title: "Attention Is All You Need",
+    description: "The original transformer architecture that goes into self-attention, encoder-decoder structure, and positional encoding",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["pinned", "research", "machine_learning"],
+  },
+  {
+    title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (ViT)",
+    description: "How transformers can be applied to images",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research", "machine_learning"],
+  },
+  {
+    title: "Swin Transformer: Hierarchical Vision Transformer using Shifted Windows",
+    description: "An optional paper to understand how hierarchical vision transformers can improve efficiency and locality",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research","machine_learning"],
+  },
+  {
+    title: "End-to-End Object Detection with Transformers (DETR)",
+    description: "The paper that introduced DETR, going into set prediction, object queries, bipartite matching loss, and end to end detection",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research","machine_learning"],
+  },
+  {
+    title: "Deformable DETR: Deformable Transformers for End-to-End Object Detection",
+    description: "Optional paper on how DETR was improved by introducing sparse attention to improve convergence",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research","machine_learning"],
+  },
+  {
+    title: "Conditional DETR for Fast Training Convergence",
+    description: "Another optimization that heeps stability and convergence",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research","machine_learning"],
+  },
+  {
+    title: "DETR3D: 3D Object Detection from Multi-view Images via 3D-to-2D Queries",
+    description: "One of the core architecture that allows 3D bounding boxes using DETR. Goes into projecting 3D reference points into 2D image space to extract features and regress 3D bounding boxes (x, y, z, w, h, l, yaw)",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research","machine_learning"],
+  },
+  {
+    title: "PETRv2: A Unified Framework for 3D Perception from Multi-Camera Images",
+    description: "Alternative to DETR3D. Uses image-position fused queries to achieve multi-view 3D object detection",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research","machine_learning"],
+  },
+  {
+    title: "DINOv2: Learning Robust Visual Features without Supervision",
+    description: "This is the backbone of RF-DETR and is what Roboflow as the foundation",
+    preview: require("./images/perception.png"),
+    website: "./Robotics/ROS2/perception",
+    tags: ["research", "machine_learning"],
+  },
+
+
 ];
 
 export type Note = {
@@ -198,7 +264,7 @@ export const Tags: { [type in TagType]: Tag } = {
     color: "#4F46E5",
   },
 
-  Research: {
+  research: {
     label: translate({ message: "Research Papers" }),
     description: translate({
       message: "Notes from reading academic research papers",
