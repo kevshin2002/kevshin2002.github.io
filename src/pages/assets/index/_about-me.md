@@ -1,5 +1,3 @@
-I'm a 5th-year Electrical Engineering student at UCSD specializing in **Machine Learning and Controls**. Passionate about **system design** for **scalability** and **reusability**, I focus on improving my skills in building efficient, maintainable code.
+I'm an electrical engineer working on **localization and state estimation** for autonomous systems: knowing exactly where a robot or vehicle is, using GNSS-INS, LiDAR map matching and the filter that ties them together.
 
-In my spare time, I work on **robotics** with **[Triton AI](http://triton-ai.eng.ucsd.edu/)**, contributing to F1Tenth and **[Indy Autonomous Challenge](https://www.indyautonomouschallenge.com/)**.
-
-I am also an avid C++ enthusiast, and enjoy broadening my knowledge through CppCon.
+From June 2025 to November 2026 I was at **AI Racing Tech**, competing in the **[Indy Autonomous Challenge](https://www.indyautonomouschallenge.com/)**, most recently as **Technical Lead, Localization**. Before that, I earned a B.S. in Electrical Engineering with a minor in Mathematics from UC San Diego.

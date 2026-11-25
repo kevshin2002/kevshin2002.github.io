@@ -159,6 +159,10 @@ html[data-theme="dark"] {
 }
 
 .footer {
+  .footer__link-item svg {
+    display: inline;
+  }
+
   border-top: 1px solid var(--ifm-color-emphasis-200);
 
   &__bottom {
@@ -243,4 +247,77 @@ html[data-theme="dark"] {
       var(--ifm-color-emphasis-100) 100%
     );
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Homepage design tokens. --home-surface-rgb must match               */
+/* --ifm-background-color so media scrims blend with no seam.          */
+/* ------------------------------------------------------------------ */
+:root {
+  --home-surface-rgb: 255 255 255;
+  --home-surface: rgb(var(--home-surface-rgb));
+  --home-ink: #0b1220;
+  --home-ink-2: rgba(28, 40, 58, 0.88);
+  --home-ink-3: rgba(70, 90, 118, 0.8);
+  --home-line: rgba(20, 45, 80, 0.1);
+  --home-line-strong: rgba(20, 45, 80, 0.2);
+  --home-accent: #05875e;
+  --home-accent-soft: rgba(5, 135, 94, 0.1);
+  --home-accent-on-dark: #2ef0b0;
+}
+
+html[data-theme="dark"] {
+  --home-surface-rgb: 16 16 16;
+  --home-ink: #ffffff;
+  --home-ink-2: rgba(222, 232, 246, 0.86);
+  --home-ink-3: rgba(170, 190, 216, 0.7);
+  --home-line: rgba(150, 190, 240, 0.1);
+  --home-line-strong: rgba(150, 190, 240, 0.2);
+  --home-accent: #2ef0b0;
+  --home-accent-soft: rgba(46, 240, 176, 0.1);
+}
+
+.page-top {
+  padding-top: 1rem;
+}
+
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 5vw, 72px);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+#about {
+  scroll-margin-top: var(--ifm-navbar-height);
+}
+
+/* Transparent navbar while it sits over the homepage video. */
+html[data-home-hero="top"] .navbar {
+  background: transparent;
+  box-shadow: none;
+  border-bottom-color: transparent;
+  --ifm-navbar-link-color: #f2f6fb;
+  --ifm-navbar-link-hover-color: var(--home-accent-on-dark);
+
+  .navbar__title,
+  .navbar__toggle,
+  .clean-btn {
+    color: #f2f6fb;
+  }
+}
+
+html[data-home-hero] .navbar {
+  transition:
+    background-color 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
+html[data-home-hero="scrolled"] .navbar {
+  background: rgb(var(--home-surface-rgb) / 0.82);
+  backdrop-filter: saturate(1.4) blur(12px);
 }

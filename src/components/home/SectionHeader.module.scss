@@ -1,0 +1,28 @@
+.header {
+  max-width: 40rem;
+  margin-bottom: clamp(2rem, 5vh, 3rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--home-accent);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--home-ink);
+}
+
+.lede {
+  margin: 1rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--home-ink-3);
+}

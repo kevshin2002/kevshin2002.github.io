@@ -1,0 +1,262 @@
+.section {
+  padding: clamp(2rem, 6vh, 3.5rem) 0 clamp(3rem, 8vh, 5rem);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  padding: 0 clamp(16px, 3vw, 40px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: clamp(22rem, 62vh, 36rem);
+  border-radius: 14px;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--home-surface);
+  border: 1px solid var(--home-line);
+}
+
+.panel:not(.withMedia):not(.withSide) {
+  min-height: 0;
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.mediaEl {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sideMedia {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 38%;
+  z-index: -2;
+  background: #0b0f14;
+
+  .flip & {
+    right: auto;
+    left: 0;
+  }
+
+  @media (max-width: 900px) {
+    position: relative;
+    max-width: none;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    order: -1;
+  }
+}
+
+// The scrim fades from the page surface (where the text sits) to clear over
+// the footage, so the panel reads correctly in both themes.
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  .withMedia & {
+    background: linear-gradient(
+      to right,
+      var(--home-surface) 0%,
+      rgb(var(--home-surface-rgb) / 0.92) 34%,
+      rgb(var(--home-surface-rgb) / 0.35) 62%,
+      rgb(var(--home-surface-rgb) / 0) 85%
+    );
+  }
+
+  .withMedia.flip & {
+    background: linear-gradient(
+      to left,
+      var(--home-surface) 0%,
+      rgb(var(--home-surface-rgb) / 0.92) 34%,
+      rgb(var(--home-surface-rgb) / 0.35) 62%,
+      rgb(var(--home-surface-rgb) / 0) 85%
+    );
+  }
+
+  // Side layout: soften only the inner edge of the clip into the panel.
+  .withSide & {
+    background: linear-gradient(
+      to right,
+      var(--home-surface) 0%,
+      var(--home-surface) 52%,
+      rgb(var(--home-surface-rgb) / 0) 70%
+    );
+  }
+
+  .withSide.flip & {
+    background: linear-gradient(
+      to left,
+      var(--home-surface) 0%,
+      var(--home-surface) 52%,
+      rgb(var(--home-surface-rgb) / 0) 70%
+    );
+  }
+
+  @media (max-width: 900px) {
+    .withSide &,
+    .withSide.flip & {
+      background: none;
+    }
+
+    .withMedia &,
+    .withMedia.flip & {
+      background: linear-gradient(
+        to top,
+        var(--home-surface) 0%,
+        rgb(var(--home-surface-rgb) / 0.9) 50%,
+        rgb(var(--home-surface-rgb) / 0.2) 100%
+      );
+    }
+  }
+}
+
+.body {
+  align-self: center;
+  max-width: 40rem;
+  padding: clamp(1.75rem, 4vw, 3.5rem);
+
+  .withSide & {
+    max-width: min(40rem, 60%);
+  }
+
+  .flip & {
+    justify-self: end;
+  }
+
+  @media (max-width: 900px) {
+    align-self: end;
+    .flip & {
+      justify-self: start;
+    }
+    .withSide & {
+      max-width: none;
+    }
+  }
+}
+
+.year {
+  margin: 0 0 0.75rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--home-accent);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--home-ink);
+}
+
+.title a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--home-line-strong);
+  text-underline-offset: 6px;
+  transition:
+    color 0.2s,
+    text-decoration-color 0.2s;
+
+  &::after {
+    content: " ↗";
+    font-size: 0.6em;
+    vertical-align: 0.35em;
+    color: var(--home-ink-3);
+  }
+
+  &:hover {
+    color: var(--home-accent);
+    text-decoration-color: var(--home-accent);
+  }
+}
+
+.org {
+  margin: 0.4rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--home-ink-2);
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--home-line-strong);
+    text-underline-offset: 3px;
+    &:hover {
+      color: var(--home-accent);
+    }
+  }
+}
+
+.roles {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.role {
+  padding-left: 1rem;
+  border-left: 2px solid var(--home-line-strong);
+
+  p {
+    margin: 0.5rem 0 0;
+    line-height: 1.7;
+    color: var(--home-ink-2);
+  }
+}
+
+.roleHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.75rem;
+  row-gap: 0.2rem;
+}
+
+.roleTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--home-ink);
+}
+
+.rolePeriod {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--home-ink-3);
+}

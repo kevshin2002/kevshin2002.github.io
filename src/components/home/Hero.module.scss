@@ -1,0 +1,180 @@
+// The hero always reads as dark: it sits on onboard footage in both themes.
+// Nothing here uses backdrop-filter: blurring over a playing video forces a
+// re-composite every frame and is the usual cause of dropped frames.
+// Its bottom edge fades into --ifm-background-color so there is no seam into
+// the rest of the page in either theme.
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  margin-top: calc(-1 * var(--ifm-navbar-height));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 2rem;
+  padding: calc(var(--ifm-navbar-height) + 4rem) clamp(16px, 5vw, 72px)
+    clamp(4.5rem, 10vh, 7rem);
+  overflow: hidden;
+  isolation: isolate;
+  color: #f4f7fb;
+  background: #05070a;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    align-items: end;
+  }
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+
+  // Portrait screens: show the whole 16:9 frame under the navbar instead of
+  // cropping most of it away; the text sits on the dark area below.
+  @media (max-aspect-ratio: 1/1) {
+    top: var(--ifm-navbar-height);
+    height: auto;
+    object-fit: contain;
+  }
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+      to top,
+      var(--ifm-background-color) 0%,
+      rgb(5 7 10 / 0.78) 9%,
+      rgb(5 7 10 / 0.3) 50%,
+      rgb(5 7 10 / 0.15) 70%,
+      rgb(5 7 10 / 0.55) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgb(5 7 10 / 0.82),
+      rgb(5 7 10 / 0.5) 35%,
+      transparent 58%
+    );
+}
+
+.content {
+  max-width: 44rem;
+}
+
+.eyebrow {
+  margin: 0 0 1rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--home-accent-on-dark);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(3rem, 9vw, 6.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  color: #fff;
+}
+
+.lede {
+  margin: 1.5rem 0 0;
+  max-width: 36rem;
+  font-size: clamp(1.02rem, 1.6vw, 1.2rem);
+  line-height: 1.6;
+  color: rgb(232 239 248 / 0.88);
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.cta,
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none !important;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.cta {
+  color: #fff !important;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: rgb(5 7 10 / 0.45);
+  &:hover {
+    background: rgb(255 255 255 / 0.14);
+    border-color: rgb(255 255 255 / 0.5);
+  }
+}
+
+.ctaPrimary {
+  color: #04120d !important;
+  background: var(--home-accent-on-dark);
+  &:hover {
+    background: #5effd0;
+  }
+}
+
+.scrollCue {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  translate: -50% 0;
+  width: 22px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1.5px solid var(--home-ink-3);
+
+  span {
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 3px;
+    height: 7px;
+    margin-left: -1.5px;
+    border-radius: 2px;
+    background: var(--home-ink-2);
+    animation: cue 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes cue {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollCue span {
+    animation: none;
+  }
+}

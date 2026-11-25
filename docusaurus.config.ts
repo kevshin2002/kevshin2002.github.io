@@ -8,7 +8,8 @@ require("dotenv").config();
 
 const config: Config = {
   title: "Kevin Shin, Electrical Engineer",
-  tagline: "Lifelong learner passionate for continuous learning and autonomy.",
+  tagline:
+    "Localization, perception and state estimation for autonomous systems.",
   url: "https://kevshin2002.github.io",
   baseUrl: "/",
   staticDirectories: ["static", "public"],
@@ -135,17 +136,17 @@ const config: Config = {
     //   textColor: '#78D6C6',
     //   isCloseable: true,
     // },
-    image: "img/logo-small.png",
+    image: "img/logo.png",
     metadata: [
       {
         name: "description",
         content:
-          "I am researcher interested in personal growth and tech trends. Tracking authentic behavior, mapping minds, bridging Lab findings to real-world impact.",
+          "Kevin Shin: localization, perception and state estimation for autonomous systems. Notes and writing on LiDAR map matching, GNSS-INS, sensor fusion, ROS 2 and modern C++.",
       },
       {
         name: "keywords",
         content:
-          "backend,developer,engineer,grpc,rest,docker,kubernetes,devops,open-source",
+          "localization,state estimation,sensor fusion,perception,lidar,slam,gnss,ins,rtk,kalman filter,autonomy,autonomous systems,ros2,c++,robotics",
       },
     ],
     colorMode: {
@@ -153,13 +154,23 @@ const config: Config = {
     },
     navbar: {
       hideOnScroll: false,
-      title: "Kevin Shin",
-      logo: {
-        alt: "Kevin Shin Logo",
-        src: "img/logo.png",
-        srcDark: "img/logo.png",
-      },
       items: [
+        {
+          to: "/",
+          label: "Home",
+          position: "left",
+          activeBaseRegex: "^/$",
+        },
+        {
+          to: "/career",
+          label: "Career",
+          position: "left",
+        },
+        {
+          to: "/projects",
+          label: "Projects",
+          position: "left",
+        },
         { to: "/blog", label: "Blog", position: "left" },
         { to: "/docs/note", label: "Notes", position: "left" },
       ],
@@ -191,12 +202,20 @@ const config: Config = {
               to: "/",
             },
             {
-              label: "Blog",
-              to: "/blog",
+              label: "Career",
+              to: "/career",
             },
             {
               label: "Projects",
               to: "/projects",
+            },
+            {
+              label: "Blog",
+              to: "/blog",
+            },
+            {
+              label: "Notes",
+              to: "/docs/note",
             },
           ],
         },

@@ -1,17 +1,16 @@
 import React from "react";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
-import { AboutMe } from "../components/homepage/AboutMe";
-import {
-  SocialLinkData,
-  SocialLinks,
-} from "../components/homepage/SocialLinks";
-import { Hero } from "../components/homepage/Hero";
+import { Hero } from "../components/home/Hero";
+import { About, type SocialLink } from "../components/home/About";
+import { Explore } from "../components/home/Explore";
 
 import avatar from "./assets/index/avatar.jpg";
 import AboutMeDesc from "./assets/index/_about-me.md";
+import useBaseUrl from "@docusaurus/useBaseUrl";
+import styles from "./index.module.scss";
 
-const socialLinks: SocialLinkData[] = [
+const socialLinks: SocialLink[] = [
   {
     name: "GitHub",
     url: "https://github.com/kevshin2002",
@@ -39,11 +38,14 @@ export default function Home(): JSX.Element {
   return (
     <Layout title="Home" description={siteConfig.tagline}>
       <Hero />
-      <main>
-        <div className="container padding-vert">
-          <AboutMe avatar={avatar} descriptionComponent={<AboutMeDesc />} />
-          <SocialLinks data={socialLinks} />
+      <main className={`home ${styles.body}`}>
+        <div className={styles.backdrop} aria-hidden="true">
+          <img src={useBaseUrl("/img/garage.jpg")} alt="" />
         </div>
+        <About avatar={avatar} links={socialLinks}>
+          <AboutMeDesc />
+        </About>
+        <Explore />
       </main>
     </Layout>
   );
